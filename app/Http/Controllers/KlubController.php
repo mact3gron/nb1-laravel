@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Klub;
@@ -19,12 +18,12 @@ class KlubController extends Controller
             'search' => 'nullable|string|max:100',
         ]);
 
-        $search=trim(validated['search'] ?? '');
+        $search = trim($validated['search'] ?? '');
 
         // Klubok lekérdezése
         $klubok = Klub::query()
             ->select(['id', 'csapatnev'])
-            ->when(search!=='',function($query) use ($search) {
+            ->when($search !== '', function ($query) use ($search) {
                 $query->where(
                     'csapatnev',
                     'like',

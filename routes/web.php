@@ -8,26 +8,43 @@ use App\Http\Controllers\LabdarugoController;
 
 /*
 |--------------------------------------------------------------------------
-| NB I. Laravel - Web Routes
+| NB I. LABDARÚGÁS - WEB ROUTES
 |--------------------------------------------------------------------------
 |
 | Laravel 12 + React + TypeScript
 | Inertia.js
 |
+| Nyilvános oldalak:
+| - Főoldal
+| - Klubok
+| - Labdarúgók
+|
+| Felhasználói funkciók:
+| - Bejelentkezés
+| - Regisztráció
+| - Dashboard
+| - Beállítások
+|
 */
 
-// --------------------------------------------------
-// FŐOLDAL
-// --------------------------------------------------
+
+// ==================================================
+// 1. FŐOLDAL
+// ==================================================
+
+// A kezdőlap átirányítása a klubok oldalára.
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return redirect()->route('klubok.index');
 })->name('home');
 
 
-// --------------------------------------------------
-// KLUBOK - NYILVÁNOS LISTÁZÁS
-// --------------------------------------------------
+// ==================================================
+// 2. KLUBOK LISTÁZÁSA
+// ==================================================
+
+// Nyilvánosan elérhető klublista.
+// Keresés és lapozás.
 
 Route::get('/klubok', [
     KlubController::class,
@@ -35,9 +52,12 @@ Route::get('/klubok', [
 ])->name('klubok.index');
 
 
-// --------------------------------------------------
-// LABDARÚGÓK - NYILVÁNOS LISTÁZÁS
-// --------------------------------------------------
+// ==================================================
+// 3. LABDARÚGÓK LISTÁZÁSA
+// ==================================================
+
+// Nyilvánosan elérhető játékoslista.
+// Klub, poszt, keresés és lapozás.
 
 Route::get('/labdarugok', [
     LabdarugoController::class,
@@ -45,9 +65,12 @@ Route::get('/labdarugok', [
 ])->name('labdarugok.index');
 
 
-// --------------------------------------------------
-// DASHBOARD - BEJELENTKEZETT FELHASZNÁLÓK
-// --------------------------------------------------
+// ==================================================
+// 4. FELHASZNÁLÓI DASHBOARD
+// ==================================================
+
+// Csak bejelentkezett és ellenőrzött
+// felhasználók számára elérhető.
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -58,15 +81,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 
-// --------------------------------------------------
-// FELHASZNÁLÓI BEÁLLÍTÁSOK
-// --------------------------------------------------
+// ==================================================
+// 5. FELHASZNÁLÓI BEÁLLÍTÁSOK
+// ==================================================
 
-require __DIR__.'/settings.php';
+// A React Starter Kit beállításai.
+
+require __DIR__ . '/settings.php';
 
 
-// --------------------------------------------------
-// AUTENTIKÁCIÓ
-// --------------------------------------------------
+// ==================================================
+// 6. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
+// ==================================================
 
-require __DIR__.'/auth.php';
+// A React Starter Kit autentikációs útvonalai.
+
+require __DIR__ . '/auth.php';
