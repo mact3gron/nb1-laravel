@@ -14,40 +14,31 @@ use App\Http\Controllers\LabdarugoController;
 | Laravel 12 + React + TypeScript
 | Inertia.js
 |
-| Nyilvános funkciók:
+| Nyilvános útvonalak:
 | - Főoldal
-| - Klubok listázása
-| - Labdarúgók listázása
-| - Keresés és lapozás
+| - Klubok
+| - Labdarúgók
 |
-| Felhasználói funkciók:
-| - Bejelentkezés
-| - Regisztráció
+| Bejelentkezett felhasználók:
 | - Dashboard
-| - Felhasználói beállítások
+|
+| Adminisztrátor:
+| - Admin felület
 |
 */
 
-
-// ==================================================
+// ==========================================
 // 1. FŐOLDAL
-// ==================================================
-
-// React oldal:
-// resources/js/pages/home.tsx
+// ==========================================
 
 Route::get('/', function () {
     return Inertia::render('home');
 })->name('home');
 
 
-// ==================================================
+// ==========================================
 // 2. KLUBOK
-// ==================================================
-
-// Nyilvános klublista kereséssel és lapozással.
-// React oldal:
-// resources/js/pages/klubok/index.tsx
+// ==========================================
 
 Route::get('/klubok', [
     KlubController::class,
@@ -55,14 +46,9 @@ Route::get('/klubok', [
 ])->name('klubok.index');
 
 
-// ==================================================
+// ==========================================
 // 3. LABDARÚGÓK
-// ==================================================
-
-// Nyilvános labdarúgólista.
-// Keresés játékos, klub és poszt alapján.
-// React oldal:
-// resources/js/pages/labdarugok/index.tsx
+// ==========================================
 
 Route::get('/labdarugok', [
     LabdarugoController::class,
@@ -70,31 +56,57 @@ Route::get('/labdarugok', [
 ])->name('labdarugok.index');
 
 
-// ==================================================
-// 4. FELHASZNÁLÓI DASHBOARD
-// ==================================================
+// ==========================================
+// 4. BEJELENTKEZETT FELHASZNÁLÓ
+// ==========================================
 
-// Csak bejelentkezett és ellenőrzött
-// felhasználóknak.
+Route::middleware(['auth', 'verified'])
+    ->group(function () {
 
-Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/dashboard', function () {
+            return Inertia::render('dashboard');
+        })->name('dashboard');
 
-    Route::get('/dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-
-});
+    });
 
 
-// ==================================================
-// 5. FELHASZNÁLÓI BEÁLLÍTÁSOK
-// ==================================================
+// ==========================================
+// 5. ADMINISZTRÁTORI ÚTVONALAK
+// ==========================================
+
+Route::middleware(['auth', 'admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        // Ideiglenes ellenőrző oldal.
+        // A következő lépésben React adminoldalra
+        // cseréljük.
+
+        Route::get('/', function () {
+
+            return response(
+                'Adminisztrátori hozzáférés engedélyezve.',
+                200
+            )->header(
+                'Content-Type',
+                'text/plain; charset=UTF-8'
+            );
+
+        })->name('index');
+
+    });
+
+
+// ==========================================
+// 6. BEÁLLÍTÁSOK
+// ==========================================
 
 require __DIR__ . '/settings.php';
 
 
-// ==================================================
-// 6. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
-// ==================================================
+// ==========================================
+// 7. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
+// ==========================================
 
 require __DIR__ . '/auth.php';
