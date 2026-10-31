@@ -1,19 +1,34 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
+import Nb1Layout from '../../layouts/nb1-layout';
 
-// Klub adatszerkezete
+/*
+|--------------------------------------------------------------------------
+| NB I. - Labdarúgók
+|--------------------------------------------------------------------------
+|
+| Laravel 12 + React + TypeScript
+| Inertia.js + Tailwind CSS
+|
+| Funkciók:
+| - Labdarúgók listázása
+| - Klub és poszt megjelenítése
+| - Keresés játékos, klub és poszt alapján
+| - Lapozás
+| - Közös NB I. Layout
+|
+*/
+
 interface Klub {
     id: number;
     csapatnev: string;
 }
 
-// Poszt adatszerkezete
 interface Poszt {
     id: number;
     nev: string;
 }
 
-// Labdarúgó adatszerkezete
 interface Labdarugo {
     id: number;
     mezszam: number;
@@ -29,17 +44,16 @@ interface Labdarugo {
     poszt: Poszt | null;
 }
 
-// Lapozott adatstruktúra
 interface Pagination {
     data: Labdarugo[];
     current_page: number;
     last_page: number;
+    per_page: number;
     total: number;
     prev_page_url: string | null;
     next_page_url: string | null;
 }
 
-// Laravel Controllerből érkező adatok
 interface Props {
     labdarugok: Pagination;
     filters: {
@@ -51,35 +65,46 @@ export default function LabdarugokIndex({
     labdarugok,
     filters,
 }: Props) {
+
     const [search, setSearch] = useState(
         filters.search ?? ''
     );
 
-    // Keresés
-    function handleSearch(event: FormEvent<HTMLFormElement>) {
+    // Keresés elküldése a Laravel Controllernek
+    function handleSearch(
+        event: FormEvent<HTMLFormElement>
+    ): void {
         event.preventDefault();
 
         router.get(
             '/labdarugok',
-            { search: search.trim() },
             {
-                preserveState: true,
+                search: search.trim(),
+            },
+            {
+                preserveState: false,
+                preserveScroll: true,
                 replace: true,
             }
         );
     }
 
-    // Keresés törlése
-    function clearSearch() {
+    // Keresési feltétel törlése
+    function clearSearch(): void {
         setSearch('');
 
-        router.get('/labdarugok', {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            '/labdarugok',
+            {},
+            {
+                preserveState: false,
+                preserveScroll: true,
+                replace: true,
+            }
+        );
     }
 
-    // Játékos teljes neve
+    // Teljes játékosnév
     function fullName(player: Labdarugo): string {
         return [
             player.vezeteknev,
@@ -87,101 +112,189 @@ export default function LabdarugokIndex({
         ].filter(Boolean).join(' ');
     }
 
-    // Születési dátum formázása
+    // Születési dátum magyar formátumban
     function formatDate(value: string): string {
-        const [year, month, day] = value
-            .slice(0, 10)
-            .split('-');
+        if (!value) {
+            return 'Nincs adat';
+        }
 
-        return `year.{month}.${day}.`;
+        const date = value.slice(0, 10);
+        const parts = date.split('-');
+
+        if (parts.length !== 3) {
+            return date;
+        }
+
+        return `parts[0].{parts[1]}.${parts[2]}.`;
     }
 
-    // Piaci érték: ezer euró
+    // Piaci érték euróezerben
     function formatValue(value: number): string {
         return `${value.toLocaleString('hu-HU')} ezer €`;
     }
 
+    // Állampolgárság
+    function citizenship(player: Labdarugo): string {
+        const values: string[] = [];
+
+        if (player.magyar) {
+            values.push('Magyar');
+        }
+
+        if (player.kulfoldi) {
+            values.push('Külföldi');
+        }
+
+        return values.length > 0
+            ? values.join(', ')
+            : 'Nincs adat';
+    }
+
     return (
-        <>
-            <Head title="NB I. - Labdarúgók" />
+        <Nb1Layout>
 
-            <div className="min-h-screen bg-slate-100 text-slate-900">
+            <Head title="NB I. | Labdarúgók" />
 
-                {/* FEJLÉC */}
-                <header className="bg-emerald-800 text-white shadow-lg">
-                    <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-5">
+            {/* =====================================
+                OLDAL FEJLÉCE
+            ===================================== */}
 
-                        <h1 className="text-2xl font-bold">
-                            ⚽ NB I. Labdarúgás
-                        </h1>
+            <section className="border-b border-white/10 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950">
 
-                        <nav className="flex flex-wrap gap-5 font-medium">
-                            <Link href="/">
-                                Főoldal
-                            </Link>
+                <div className="mx-auto max-w-7xl px-6 py-16">
 
-                            <Link href="/klubok">
-                                Klubok
-                            </Link>
+                    {/* MORZSANAVIGÁCIÓ */}
+                    <div className="mb-5 flex items-center gap-2 text-sm text-slate-400">
 
-                            <Link
-                                href="/labdarugok"
-                                className="underline underline-offset-4"
-                            >
-                                Labdarúgók
-                            </Link>
-                        </nav>
+                        <Link
+                            href="/"
+                            className="hover:text-emerald-400"
+                        >
+                            Főoldal
+                        </Link>
+
+                        <span>/</span>
+
+                        <span className="text-emerald-400">
+                            Labdarúgók
+                        </span>
 
                     </div>
-                </header>
 
-                {/* FŐ TARTALOM */}
-                <main className="mx-auto max-w-7xl px-4 py-10">
+                    <span className="inline-block rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-emerald-400">
+                        Magyar labdarúgás
+                    </span>
 
-                    {/* OLDAL CÍME */}
-                    <section className="mb-8">
-                        <h2 className="text-3xl font-bold">
-                            NB I. labdarúgók
+                    <h1 className="mt-6 text-4xl font-black tracking-tight text-white sm:text-5xl">
+
+                        NB I.
+
+                        <span className="ml-3 text-emerald-400">
+                            LABDARÚGÓK
+                        </span>
+
+                    </h1>
+
+                    <p className="mt-5 max-w-2xl leading-7 text-slate-300">
+                        Ismerd meg a magyar első osztályú
+                        labdarúgás játékosait, klubjaikat,
+                        posztjukat és nyilvántartott
+                        piaci értéküket!
+                    </p>
+
+                </div>
+            </section>
+
+            {/* =====================================
+                FŐ TARTALOM
+            ===================================== */}
+
+            <section className="bg-slate-950 px-4 py-12 sm:px-6">
+
+                <div className="mx-auto max-w-7xl">
+
+                    {/* STATISZTIKÁK */}
+
+                    <div className="mb-8 grid gap-4 sm:grid-cols-2">
+
+                        <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+
+                            <p className="text-sm font-medium text-slate-400">
+                                Találatok száma
+                            </p>
+
+                            <p className="mt-3 text-4xl font-black text-emerald-400">
+                                {labdarugok.total}
+                            </p>
+
+                        </div>
+
+                        <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+
+                            <p className="text-sm font-medium text-slate-400">
+                                Aktuális oldal
+                            </p>
+
+                            <p className="mt-3 text-4xl font-black text-white">
+
+                                {labdarugok.current_page}
+
+                                <span className="ml-2 text-lg text-slate-500">
+                                    / {labdarugok.last_page}
+                                </span>
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    {/* =====================================
+                        KERESÉS
+                    ===================================== */}
+
+                    <section className="mb-8 rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl">
+
+                        <h2 className="text-xl font-bold text-white">
+                            Labdarúgó keresése
                         </h2>
 
-                        <p className="mt-2 text-slate-600">
-                            Játékosok, klubok, posztok és
-                            piaci értékek.
+                        <p className="mt-2 text-sm text-slate-400">
+                            Keress játékosnév, klub vagy
+                            poszt alapján.
                         </p>
-                    </section>
-
-                    {/* KERESÉS */}
-                    <section className="mb-6 rounded-xl bg-white p-5 shadow-sm">
 
                         <form
                             onSubmit={handleSearch}
-                            className="flex flex-wrap items-end gap-3"
+                            className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end"
                         >
-                            <div className="min-w-48 flex-1">
+
+                            <div className="flex-1">
 
                                 <label
-                                    htmlFor="search"
-                                    className="mb-2 block font-medium"
+                                    htmlFor="player-search"
+                                    className="mb-2 block text-sm font-semibold text-slate-300"
                                 >
-                                    Labdarúgó keresése
+                                    Keresési feltétel
                                 </label>
 
                                 <input
-                                    id="search"
-                                    type="text"
+                                    id="player-search"
+                                    type="search"
                                     value={search}
                                     maxLength={100}
                                     onChange={(event) =>
                                         setSearch(event.target.value)
                                     }
                                     placeholder="Játékos, klub vagy poszt..."
-                                    className="w-full rounded-lg border border-slate-300 p-3 outline-none focus:border-emerald-600"
+                                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-5 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 />
+
                             </div>
 
                             <button
                                 type="submit"
-                                className="rounded-lg bg-emerald-700 px-6 py-3 font-semibold text-white hover:bg-emerald-800"
+                                className="rounded-xl bg-emerald-600 px-7 py-3 font-bold text-white transition hover:bg-emerald-500"
                             >
                                 Keresés
                             </button>
@@ -189,135 +302,237 @@ export default function LabdarugokIndex({
                             <button
                                 type="button"
                                 onClick={clearSearch}
-                                className="rounded-lg bg-slate-200 px-6 py-3 font-semibold hover:bg-slate-300"
+                                className="rounded-xl border border-slate-600 bg-slate-800 px-7 py-3 font-bold text-slate-200 transition hover:bg-slate-700"
                             >
                                 Törlés
                             </button>
 
                         </form>
+
                     </section>
 
-                    {/* LABDARÚGÓK TÁBLÁZATA */}
-                    <section className="overflow-hidden rounded-xl bg-white shadow-sm">
+                    {/* =====================================
+                        LABDARÚGÓK TÁBLÁZATA
+                    ===================================== */}
 
-                        <div className="border-b border-slate-200 p-6">
+                    <section className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-xl">
 
-                            <h3 className="text-xl font-semibold">
-                                Játékosok listája
-                            </h3>
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-6 py-5">
 
-                            <p className="mt-1 text-sm text-slate-500">
-                                Találatok: {labdarugok.total}
-                            </p>
+                            <div>
+
+                                <h2 className="text-xl font-bold text-white">
+                                    Játékosok listája
+                                </h2>
+
+                                <p className="mt-1 text-sm text-slate-400">
+                                    Labdarúgók névsor szerint.
+                                </p>
+
+                            </div>
+
+                            <span className="rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-400">
+                                {labdarugok.total} találat
+                            </span>
 
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
 
-                                <thead className="bg-emerald-800 text-white">
+                            <table className="w-full min-w-[1050px] border-collapse text-left text-sm">
+
+                                <thead className="bg-slate-800 uppercase tracking-wider text-slate-300">
+
                                     <tr>
-                                        <th className="p-4">Mez</th>
-                                        <th className="p-4">Játékos</th>
-                                        <th className="p-4">Klub</th>
-                                        <th className="p-4">Poszt</th>
-                                        <th className="p-4">Született</th>
-                                        <th className="p-4">Állampolgárság</th>
-                                        <th className="p-4">Érték</th>
+                                        <th className="px-5 py-5">
+                                            Mez
+                                        </th>
+
+                                        <th className="px-5 py-5">
+                                            Labdarúgó
+                                        </th>
+
+                                        <th className="px-5 py-5">
+                                            Klub
+                                        </th>
+
+                                        <th className="px-5 py-5">
+                                            Poszt
+                                        </th>
+
+                                        <th className="px-5 py-5">
+                                            Született
+                                        </th>
+
+                                        <th className="px-5 py-5">
+                                            Állampolgárság
+                                        </th>
+
+                                        <th className="px-5 py-5">
+                                            Érték
+                                        </th>
+
                                     </tr>
                                 </thead>
 
-                                <tbody>
+                                <tbody className="divide-y divide-white/5">
+
                                     {labdarugok.data.map((player) => (
 
                                         <tr
                                             key={player.id}
-                                            className="border-b border-slate-100 transition hover:bg-emerald-50"
+                                            className="transition hover:bg-emerald-500/10"
                                         >
 
-                                            <td className="p-4 font-bold">
-                                                {player.mezszam}
+                                            {/* MEZSZÁM */}
+                                            <td className="px-5 py-5">
+
+                                                <span className="inline-flex min-w-10 justify-center rounded-lg bg-emerald-500/10 px-3 py-2 font-black text-emerald-400">
+                                                    {player.mezszam}
+                                                </span>
+
                                             </td>
 
-                                            <td className="p-4 font-semibold">
+                                            {/* JÁTÉKOS NEVE */}
+                                            <td className="px-5 py-5 font-bold text-white">
                                                 {fullName(player)}
                                             </td>
 
-                                            <td className="p-4">
+                                            {/* KLUB */}
+                                            <td className="px-5 py-5 text-slate-300">
                                                 {player.klub?.csapatnev ?? 'Nincs klub'}
                                             </td>
 
-                                            <td className="p-4">
+                                            {/* POSZT */}
+                                            <td className="px-5 py-5 text-slate-300">
                                                 {player.poszt?.nev ?? 'Nincs poszt'}
                                             </td>
 
-                                            <td className="p-4">
+                                            {/* SZÜLETÉS */}
+                                            <td className="px-5 py-5 text-slate-300">
                                                 {formatDate(player.szulido)}
                                             </td>
 
-                                            <td className="p-4">
-                                                {[
-                                                    player.magyar ? 'Magyar' : null,
-                                                    player.kulfoldi ? 'Külföldi' : null
-                                                ].filter(Boolean).join(', ') || 'Nincs adat'}
+                                            {/* ÁLLAMPOLGÁRSÁG */}
+                                            <td className="px-5 py-5 text-slate-300">
+                                                {citizenship(player)}
                                             </td>
 
-                                            <td className="p-4 font-medium text-emerald-700">
+                                            {/* ÉRTÉK */}
+                                            <td className="whitespace-nowrap px-5 py-5 font-semibold text-emerald-400">
                                                 {formatValue(player.ertek)}
                                             </td>
 
                                         </tr>
+
                                     ))}
+
                                 </tbody>
 
                             </table>
+
                         </div>
 
+                        {/* NINCS TALÁLAT */}
+
                         {labdarugok.data.length === 0 && (
-                            <div className="p-10 text-center text-slate-500">
-                                Nincs találat a megadott keresésre.
+
+                            <div className="px-6 py-14 text-center">
+
+                                <div className="mb-4 text-4xl">
+                                    ⚽
+                                </div>
+
+                                <h3 className="text-lg font-bold text-white">
+                                    Nincs találat
+                                </h3>
+
+                                <p className="mt-2 text-sm text-slate-400">
+                                    Nem található labdarúgó
+                                    a megadott keresési feltétellel.
+                                </p>
+
                             </div>
+
                         )}
 
                     </section>
 
-                    {/* LAPOZÁS */}
-                    <section className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                    {/* =====================================
+                        LAPOZÁS
+                    ===================================== */}
 
-                        <p className="text-sm text-slate-600">
-                            {labdarugok.current_page}. oldal /
-                            {' '}{labdarugok.last_page}
+                    <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+
+                        <p className="text-sm text-slate-400">
+                            {labdarugok.current_page}. oldal
+                            {' '} / {' '}
+                            {labdarugok.last_page}
                         </p>
 
-                        <div className="flex gap-3">
+                        <nav
+                            aria-label="Labdarúgók lapozása"
+                            className="flex gap-3"
+                        >
 
-                            {labdarugok.prev_page_url && (
+                            {labdarugok.prev_page_url ? (
+
                                 <Link
                                     href={labdarugok.prev_page_url}
-                                    className="rounded-lg bg-emerald-700 px-5 py-2 font-medium text-white hover:bg-emerald-800"
+                                    preserveScroll
+                                    className="rounded-xl border border-emerald-600 px-6 py-3 font-semibold text-emerald-400 transition hover:bg-emerald-600 hover:text-white"
                                 >
                                     Előző
                                 </Link>
+
+                            ) : (
+
+                                <span className="cursor-not-allowed rounded-xl border border-slate-700 px-6 py-3 font-semibold text-slate-600">
+                                    Előző
+                                </span>
+
                             )}
 
-                            {labdarugok.next_page_url && (
+                            {labdarugok.next_page_url ? (
+
                                 <Link
                                     href={labdarugok.next_page_url}
-                                    className="rounded-lg bg-emerald-700 px-5 py-2 font-medium text-white hover:bg-emerald-800"
+                                    preserveScroll
+                                    className="rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-500"
                                 >
                                     Következő
                                 </Link>
+
+                            ) : (
+
+                                <span className="cursor-not-allowed rounded-xl bg-slate-800 px-6 py-3 font-semibold text-slate-600">
+                                    Következő
+                                </span>
+
                             )}
 
-                        </div>
+                        </nav>
 
-                    </section>
+                    </div>
 
-                </main>
-            </div>
-        </>
+                    {/* VISSZA A FŐOLDALRA */}
+
+                    <div className="mt-12 text-center">
+
+                        <Link
+                            href="/"
+                            className="text-sm font-semibold text-slate-400 transition hover:text-emerald-400"
+                        >
+                            ← Vissza a főoldalra
+                        </Link>
+
+                    </div>
+
+                </div>
+            </section>
+
+        </Nb1Layout>
     );
 }
-
 
 
