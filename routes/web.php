@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -15,16 +14,17 @@ use App\Http\Controllers\LabdarugoController;
 | Laravel 12 + React + TypeScript
 | Inertia.js
 |
-| Nyilvános oldalak:
+| Nyilvános funkciók:
 | - Főoldal
-| - Klubok
-| - Labdarúgók
+| - Klubok listázása
+| - Labdarúgók listázása
+| - Keresés és lapozás
 |
 | Felhasználói funkciók:
 | - Bejelentkezés
 | - Regisztráció
 | - Dashboard
-| - Beállítások
+| - Felhasználói beállítások
 |
 */
 
@@ -33,20 +33,21 @@ use App\Http\Controllers\LabdarugoController;
 // 1. FŐOLDAL
 // ==================================================
 
-// Az NB I. kezdőlap megjelenítése.
-// React komponens: resources/js/pages/welcome.tsx
+// React oldal:
+// resources/js/pages/home.tsx
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('home');
 })->name('home');
 
 
 // ==================================================
-// 2. KLUBOK LISTÁZÁSA
+// 2. KLUBOK
 // ==================================================
 
-// Nyilvánosan elérhető klublista.
-// Keresés és lapozás.
+// Nyilvános klublista kereséssel és lapozással.
+// React oldal:
+// resources/js/pages/klubok/index.tsx
 
 Route::get('/klubok', [
     KlubController::class,
@@ -55,11 +56,13 @@ Route::get('/klubok', [
 
 
 // ==================================================
-// 3. LABDARÚGÓK LISTÁZÁSA
+// 3. LABDARÚGÓK
 // ==================================================
 
-// Nyilvánosan elérhető játékoslista.
-// Klub, poszt, keresés és lapozás.
+// Nyilvános labdarúgólista.
+// Keresés játékos, klub és poszt alapján.
+// React oldal:
+// resources/js/pages/labdarugok/index.tsx
 
 Route::get('/labdarugok', [
     LabdarugoController::class,
@@ -72,7 +75,7 @@ Route::get('/labdarugok', [
 // ==================================================
 
 // Csak bejelentkezett és ellenőrzött
-// felhasználók számára elérhető.
+// felhasználóknak.
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -87,15 +90,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // 5. FELHASZNÁLÓI BEÁLLÍTÁSOK
 // ==================================================
 
-// A React Starter Kit beállításai.
-
 require __DIR__ . '/settings.php';
 
 
 // ==================================================
 // 6. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
 // ==================================================
-
-// A React Starter Kit autentikációs útvonalai.
 
 require __DIR__ . '/auth.php';
