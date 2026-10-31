@@ -1,5 +1,4 @@
 <?php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -36,10 +35,13 @@ class Nb1Seeder extends Seeder
                 'klubid' => (int) $row['klubid'],
                 'posztid' => (int) $row['posztid'],
                 'utonev' => $row['utonev'] === ''
-                    ? null : $row['utonev'],
+                    ? null
+                    : $row['utonev'],
                 'vezeteknev' => $row['vezeteknev'],
                 'szulido' => str_replace(
-                    '.', '-', $row['szulido']
+                    '.',
+                    '-',
+                    rtrim(trim($row['szulido']), '.')
                 ),
                 'magyar' => (int) ($row['magyar'] !== '0'),
                 'kulfoldi' => (int) ($row['kulfoldi'] !== '0'),
@@ -54,18 +56,22 @@ class Nb1Seeder extends Seeder
             $posztok,
             $labdarugok
         ): void {
+
+            // Klubok mentése
             DB::table('klub')->upsert(
                 $klubok,
                 ['id'],
                 ['csapatnev']
             );
 
+            // Posztok mentése
             DB::table('poszt')->upsert(
                 $posztok,
                 ['id'],
                 ['nev']
             );
 
+            // Labdarúgók mentése 100-as csoportokban
             foreach (array_chunk($labdarugok, 100) as $chunk) {
                 DB::table('labdarugo')->upsert(
                     $chunk,
@@ -79,47 +85,68 @@ class Nb1Seeder extends Seeder
                         'szulido',
                         'magyar',
                         'kulfoldi',
-                        'ertek'
+                        'ertek',
                     ]
                 );
             }
         });
     }
 
+    /**
+     * TSV adatfájl beolvasása.
+     */
     private function readTsv(string $filename): array
     {
         $path = database_path('data/' . $filename);
 
+        // Ellenőrizzük, hogy létezik-e a fájl
         if (!is_file($path)) {
             throw new RuntimeException(
                 "Hiányzó adatfájl: {$path}"
             );
         }
 
+        // Fájl sorainak beolvasása
         $lines = file(
             $path,
             FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES
         );
 
-        if (lines===false||count(lines) < 2) {
+        // Ellenőrizzük, hogy van-e adat
+        if ($lines === false || count($lines) < 2) {
             throw new RuntimeException(
                 "Üres adatfájl: {$path}"
             );
         }
 
-        $headers = explode("\t", array_shift($lines));
+        // Fejléc feldolgozása
+        $headerLine = array_shift($lines);
+
+        // UTF-8 BOM eltávolítása, ha szükséges
+        $headerLine = preg_replace(
+            '/^\xEF\xBB\xBF/',
+            '',
+            $headerLine
+        );
+
+        $headers = explode("\t", $headerLine);
+
         $rows = [];
 
-        foreach ($lines as $line) {
+        // Adatsorok feldolgozása
+        foreach ($lines as $lineNumber => $line) {
             $values = explode("\t", $line);
 
-            if (count(values)!==count(headers)) {
+            // Oszlopok számának ellenőrzése
+            if (count($values) !== count($headers)) {
                 throw new RuntimeException(
-                    "Hibás adatsor: {$path}"
+                    "Hibás adatsor a(z) {$filename} fájlban, " .
+                    "adatsor: " . ($lineNumber + 1)
                 );
             }
 
-            $rows[]=arraycombine(headers, $values);
+            // Fejlécek és értékek összekapcsolása
+            $rows[] = array_combine($headers, $values);
         }
 
         return $rows;

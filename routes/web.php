@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -32,10 +33,11 @@ use App\Http\Controllers\LabdarugoController;
 // 1. FŐOLDAL
 // ==================================================
 
-// A kezdőlap átirányítása a klubok oldalára.
+// Az NB I. kezdőlap megjelenítése.
+// React komponens: resources/js/pages/welcome.tsx
 
 Route::get('/', function () {
-    return redirect()->route('klubok.index');
+    return Inertia::render('welcome');
 })->name('home');
 
 
