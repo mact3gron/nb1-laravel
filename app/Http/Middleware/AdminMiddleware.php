@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Closure;
@@ -8,44 +7,34 @@ use Symfony\Component\HttpFoundation\Response;
 
 /*
 |--------------------------------------------------------------------------
-| NB I. - Adminisztrátori Middleware
+| NB I. - ADMIN MIDDLEWARE
 |--------------------------------------------------------------------------
 |
 | Laravel 12
 |
-| Feladata:
-|
-| 1. Ellenőrzi, hogy a felhasználó bejelentkezett-e.
-| 2. Ellenőrzi az is_admin mező értékét.
-| 3. Csak adminisztrátor esetén engedi tovább a kérést.
-|
-| Vendég: bejelentkezési oldal
-| Normál felhasználó: HTTP 403
-| Adminisztrátor: hozzáférés engedélyezve
+| Feladat:
+| - Vendég felhasználó átirányítása
+| - Normál felhasználó hozzáférésének tiltása
+| - Adminisztrátor továbbengedése
 |
 */
 
 class AdminMiddleware
 {
-    /**
-     * Beérkező HTTP-kérés ellenőrzése.
-     *
-     * @param Closure(Request): Response $next
-     */
     public function handle(
         Request $request,
         Closure $next
     ): Response {
 
-        // Bejelentkezett felhasználó lekérése.
+        // Bejelentkezett felhasználó
         $user = $request->user();
 
-        // 1. Nincs bejelentkezve.
+        // 1. Vendég felhasználó
         if ($user === null) {
             return redirect()->guest(route('login'));
         }
 
-        // 2. Bejelentkezett, de nem admin.
+        // 2. Normál felhasználó
         if ($user->is_admin !== true) {
             abort(
                 403,
@@ -53,7 +42,7 @@ class AdminMiddleware
             );
         }
 
-        // 3. Adminisztrátor: kérés továbbengedése.
-        return next(request);
+        // 3. Adminisztrátor
+        return $next($request);
     }
 }
