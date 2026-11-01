@@ -1,21 +1,17 @@
-
 import { Link, usePage } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
 
 /*
 |--------------------------------------------------------------------------
-| NB I. - Közös oldalelrendezés
+| NB I. - KÖZÖS OLDAL ELRENDEZÉS
 |--------------------------------------------------------------------------
 |
 | Laravel 12 + React + TypeScript + Inertia.js
 |
-| Funkciók:
-| - Reszponzív fejléc
-| - Mobil navigáció
-| - Adatbázis almenü
-| - Bejelentkezés / kijelentkezés
-| - Jogosultság szerinti menüpontok
-| - Közös lábléc
+| Jogosultságok:
+| Vendég: Főoldal, Adatbázis, Kapcsolat
+| Regisztrált: fentiek + Üzenetek
+| Admin: fentiek + Admin és később CRUD
 |
 */
 
@@ -37,6 +33,7 @@ interface AuthData {
 export default function Nb1Layout({
     children,
 }: LayoutProps) {
+
     const { url, props } = usePage();
 
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,7 +43,6 @@ export default function Nb1Layout({
 
     const isAdmin = user?.is_admin === true;
 
-    // Aktív menüpont ellenőrzése
     function isActive(path: string): boolean {
         const current = url.split('?')[0];
 
@@ -60,16 +56,18 @@ export default function Nb1Layout({
         );
     }
 
-    function linkClass(path: string): string {
+    function navClass(path: string): string {
         return (
             'text-sm font-semibold transition-colors ' +
-            (isActive(path)
-                ? 'text-emerald-400'
-                : 'text-slate-300 hover:text-emerald-400')
+            (
+                isActive(path)
+                    ? 'text-emerald-400'
+                    : 'text-slate-300 hover:text-emerald-400'
+            )
         );
     }
 
-    function closeMobileMenu(): void {
+    function closeMenu(): void {
         setMobileOpen(false);
     }
 
@@ -86,12 +84,13 @@ export default function Nb1Layout({
 
                     <Link
                         href="/"
-                        onClick={closeMobileMenu}
+                        onClick={closeMenu}
                         className="shrink-0 text-xl font-black tracking-tight sm:text-2xl"
                     >
                         <span className="text-emerald-400">
                             NB I.
                         </span>
+
                         <span className="ml-2 text-white">
                             LABDARÚGÁS
                         </span>
@@ -101,12 +100,12 @@ export default function Nb1Layout({
 
                     <nav
                         aria-label="Fő navigáció"
-                        className="hidden items-center gap-5 lg:flex"
+                        className="hidden items-center gap-4 xl:flex"
                     >
 
                         <Link
                             href="/"
-                            className={linkClass('/')}
+                            className={navClass('/')}
                         >
                             Főoldal
                         </Link>
@@ -114,65 +113,65 @@ export default function Nb1Layout({
                         {/* ADATBÁZIS ALMENÜ */}
 
                         <details className="group relative">
-                            <summary className="cursor-pointer list-none text-sm font-semibold text-slate-300 transition hover:text-emerald-400">
+
+                            <summary className="cursor-pointer list-none text-sm font-semibold text-slate-300 hover:text-emerald-400">
                                 Adatbázis ▾
                             </summary>
 
-                            <div className="absolute left-0 top-full z-50 min-w-48 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl">
+                            <div className="absolute left-0 top-full z-50 min-w-48 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-xl">
 
                                 <Link
                                     href="/klubok"
-                                    className="block rounded-lg px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-emerald-400"
+                                    className="block rounded-lg px-4 py-3 text-sm hover:bg-slate-800 hover:text-emerald-400"
                                 >
                                     Klubok
                                 </Link>
 
                                 <Link
                                     href="/labdarugok"
-                                    className="block rounded-lg px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-emerald-400"
+                                    className="block rounded-lg px-4 py-3 text-sm hover:bg-slate-800 hover:text-emerald-400"
                                 >
                                     Labdarúgók
                                 </Link>
 
                             </div>
+
                         </details>
 
-                        {/* ELŐKÉSZÍTETT MENÜPONTOK */}
+                        {/* KAPCSOLAT - MINDENKINEK */}
 
-                        <span
-                            aria-disabled="true"
-                            title="Fejlesztés alatt"
-                            className="cursor-not-allowed text-sm text-slate-500"
+                        <Link
+                            href="/kapcsolat"
+                            className={navClass('/kapcsolat')}
                         >
                             Kapcsolat
-                        </span>
+                        </Link>
+
+                        {/* DIAGRAM - KÉSŐBB KÉSZÜL */}
 
                         <span
-                            aria-disabled="true"
                             title="Fejlesztés alatt"
                             className="cursor-not-allowed text-sm text-slate-500"
                         >
                             Diagram
                         </span>
 
-                        {/* BEJELENTKEZETT FELHASZNÁLÓ */}
+                        {/* ÜZENETEK - CSAK BEJELENTKEZVE */}
 
                         {user && (
-                            <span
-                                aria-disabled="true"
-                                title="Fejlesztés alatt"
-                                className="cursor-not-allowed text-sm text-slate-500"
+                            <Link
+                                href="/uzenetek"
+                                className={navClass('/uzenetek')}
                             >
                                 Üzenetek
-                            </span>
+                            </Link>
                         )}
 
-                        {/* ADMINISZTRÁTOR */}
+                        {/* ADMIN MENÜ */}
 
                         {isAdmin && (
                             <>
                                 <span
-                                    aria-disabled="true"
                                     title="Fejlesztés alatt"
                                     className="cursor-not-allowed text-sm text-slate-500"
                                 >
@@ -181,7 +180,7 @@ export default function Nb1Layout({
 
                                 <Link
                                     href="/admin"
-                                    className={linkClass('/admin')}
+                                    className={navClass('/admin')}
                                 >
                                     Admin
                                 </Link>
@@ -190,9 +189,9 @@ export default function Nb1Layout({
 
                     </nav>
 
-                    {/* ASZTALI FIÓKMENÜ */}
+                    {/* FELHASZNÁLÓI MENÜ */}
 
-                    <div className="hidden items-center gap-3 lg:flex">
+                    <div className="hidden items-center gap-3 xl:flex">
 
                         {user ? (
                             <>
@@ -205,7 +204,7 @@ export default function Nb1Layout({
 
                                 <Link
                                     href="/dashboard"
-                                    className="rounded-lg border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-400 hover:bg-emerald-600 hover:text-white"
+                                    className="rounded-lg border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-emerald-600 hover:text-white"
                                 >
                                     Dashboard
                                 </Link>
@@ -236,6 +235,7 @@ export default function Nb1Layout({
                                 </Link>
                             </>
                         )}
+
                     </div>
 
                     {/* MOBILMENÜ GOMB */}
@@ -243,41 +243,42 @@ export default function Nb1Layout({
                     <button
                         type="button"
                         aria-label="Navigáció megnyitása"
-                        aria-expanded={mobileOpen}
                         aria-controls="nb1-mobile-menu"
+                        aria-expanded={mobileOpen}
                         onClick={() => setMobileOpen(!mobileOpen)}
-                        className="rounded-lg border border-white/20 px-4 py-2 font-semibold text-white lg:hidden"
+                        className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold xl:hidden"
                     >
                         {mobileOpen ? '✕ Bezárás' : '☰ Menü'}
                     </button>
 
                 </div>
 
-                {/* MOBIL NAVIGÁCIÓ */}
+                {/* MOBILMENÜ */}
 
                 {mobileOpen && (
                     <nav
                         id="nb1-mobile-menu"
                         aria-label="Mobil navigáció"
-                        className="border-t border-white/10 bg-slate-900 px-5 py-5 lg:hidden"
+                        className="border-t border-white/10 bg-slate-900 px-5 py-5 xl:hidden"
                     >
+
                         <div className="mx-auto flex max-w-7xl flex-col gap-2">
 
                             <Link
                                 href="/"
-                                onClick={closeMobileMenu}
-                                className="rounded-lg px-4 py-3 font-semibold hover:bg-slate-800"
+                                onClick={closeMenu}
+                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
                             >
                                 Főoldal
                             </Link>
 
-                            <div className="px-4 pt-3 text-xs font-bold uppercase tracking-wider text-emerald-400">
+                            <p className="px-4 pt-3 text-xs font-bold uppercase text-emerald-400">
                                 Adatbázis
-                            </div>
+                            </p>
 
                             <Link
                                 href="/klubok"
-                                onClick={closeMobileMenu}
+                                onClick={closeMenu}
                                 className="rounded-lg px-4 py-3 hover:bg-slate-800"
                             >
                                 Klubok
@@ -285,35 +286,49 @@ export default function Nb1Layout({
 
                             <Link
                                 href="/labdarugok"
-                                onClick={closeMobileMenu}
+                                onClick={closeMenu}
                                 className="rounded-lg px-4 py-3 hover:bg-slate-800"
                             >
                                 Labdarúgók
                             </Link>
 
-                            <div className="px-4 py-3 text-sm text-slate-500">
-                                Kapcsolat – Hamarosan
-                            </div>
+                            {/* KAPCSOLAT - VENDÉGNEK IS */}
 
-                            <div className="px-4 py-3 text-sm text-slate-500">
+                            <Link
+                                href="/kapcsolat"
+                                onClick={closeMenu}
+                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
+                            >
+                                Kapcsolat
+                            </Link>
+
+                            <span className="px-4 py-3 text-sm text-slate-500">
                                 Diagram – Hamarosan
-                            </div>
+                            </span>
+
+                            {/* ÜZENETEK - BEJELENTKEZVE */}
 
                             {user && (
-                                <div className="px-4 py-3 text-sm text-slate-500">
-                                    Üzenetek – Hamarosan
-                                </div>
+                                <Link
+                                    href="/uzenetek"
+                                    onClick={closeMenu}
+                                    className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
+                                >
+                                    Üzenetek
+                                </Link>
                             )}
+
+                            {/* ADMIN */}
 
                             {isAdmin && (
                                 <>
-                                    <div className="px-4 py-3 text-sm text-slate-500">
+                                    <span className="px-4 py-3 text-sm text-slate-500">
                                         CRUD – Hamarosan
-                                    </div>
+                                    </span>
 
                                     <Link
                                         href="/admin"
-                                        onClick={closeMobileMenu}
+                                        onClick={closeMenu}
                                         className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
                                     >
                                         Adminisztráció
@@ -323,15 +338,17 @@ export default function Nb1Layout({
 
                             <div className="my-3 border-t border-white/10" />
 
+                            {/* FIÓK */}
+
                             {user ? (
                                 <>
-                                    <div className="px-4 py-2 text-sm text-emerald-400">
+                                    <p className="px-4 py-2 text-sm text-emerald-400">
                                         Bejelentkezve: {user.name}
-                                    </div>
+                                    </p>
 
                                     <Link
                                         href="/dashboard"
-                                        onClick={closeMobileMenu}
+                                        onClick={closeMenu}
                                         className="rounded-lg px-4 py-3 hover:bg-slate-800"
                                     >
                                         Dashboard
@@ -341,7 +358,7 @@ export default function Nb1Layout({
                                         href="/logout"
                                         method="post"
                                         as="button"
-                                        className="cursor-pointer rounded-lg bg-red-700 px-4 py-3 text-left font-semibold text-white"
+                                        className="cursor-pointer rounded-lg bg-red-700 px-4 py-3 text-left font-semibold"
                                     >
                                         Kijelentkezés
                                     </Link>
@@ -350,7 +367,7 @@ export default function Nb1Layout({
                                 <>
                                     <Link
                                         href="/login"
-                                        onClick={closeMobileMenu}
+                                        onClick={closeMenu}
                                         className="rounded-lg px-4 py-3 hover:bg-slate-800"
                                     >
                                         Bejelentkezés
@@ -358,8 +375,8 @@ export default function Nb1Layout({
 
                                     <Link
                                         href="/register"
-                                        onClick={closeMobileMenu}
-                                        className="rounded-lg bg-emerald-600 px-4 py-3 font-semibold text-white"
+                                        onClick={closeMenu}
+                                        className="rounded-lg bg-emerald-600 px-4 py-3 font-semibold"
                                     >
                                         Regisztráció
                                     </Link>
@@ -367,6 +384,7 @@ export default function Nb1Layout({
                             )}
 
                         </div>
+
                     </nav>
                 )}
 

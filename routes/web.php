@@ -1,8 +1,13 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
 use App\Http\Controllers\KlubController;
 use App\Http\Controllers\LabdarugoController;
+use App\Http\Controllers\KapcsolatController;
+use App\Http\Controllers\UzenetekController;
+
 /*
 |--------------------------------------------------------------------------
 | NB I. LABDARÚGÁS - WEB ROUTES
@@ -10,12 +15,13 @@ use App\Http\Controllers\LabdarugoController;
 |
 | Laravel 12 + React + TypeScript + Inertia.js
 |
-| Nyilvános oldalak:
+| Vendégek:
 | - Főoldal
-| - Klubok listája
-| - Labdarúgók listája
+| - Adatbázis
+| - Kapcsolat
 |
 | Bejelentkezett felhasználók:
+| - Üzenetek
 | - Dashboard
 |
 | Adminisztrátor:
@@ -24,18 +30,16 @@ use App\Http\Controllers\LabdarugoController;
 */
 
 // ==================================================
-// 1. FŐOLDAL
+// 1. FŐOLDAL - NYILVÁNOS
 // ==================================================
 
 Route::get('/', function () {
-
     return Inertia::render('home');
-
 })->name('home');
 
 
 // ==================================================
-// 2. KLUBOK
+// 2. KLUBOK - NYILVÁNOS
 // ==================================================
 
 Route::get('/klubok', [
@@ -45,7 +49,7 @@ Route::get('/klubok', [
 
 
 // ==================================================
-// 3. LABDARÚGÓK
+// 3. LABDARÚGÓK - NYILVÁNOS
 // ==================================================
 
 Route::get('/labdarugok', [
@@ -55,58 +59,88 @@ Route::get('/labdarugok', [
 
 
 // ==================================================
-// 4. FELHASZNÁLÓI DASHBOARD
+// 4. KAPCSOLAT - NYILVÁNOS
+// ==================================================
+
+// Vendégek is megnyithatják az űrlapot.
+
+Route::get('/kapcsolat', [
+    KapcsolatController::class,
+    'index'
+])->name('kapcsolat.index');
+
+
+// Vendégek is küldhetnek üzenetet.
+// Percenként maximum 5 beküldési kísérlet.
+
+Route::post('/kapcsolat', [
+    KapcsolatController::class,
+    'store'
+])
+    ->middleware('throttle:5,1')
+    ->name('kapcsolat.store');
+
+
+// ==================================================
+// 5. ÜZENETEK - BEJELENTKEZÉS SZÜKSÉGES
+// ==================================================
+
+// FONTOS:
+// Csak auth middleware!
+// A tanári feladat nem ír elő adminjogot
+// az üzenetek megtekintéséhez.
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/uzenetek', [
+        UzenetekController::class,
+        'index'
+    ])->name('uzenetek.index');
+
+});
+
+
+// ==================================================
+// 6. DASHBOARD - BEJELENTKEZETT FELHASZNÁLÓ
 // ==================================================
 
 Route::middleware(['auth', 'verified'])
     ->group(function () {
 
         Route::get('/dashboard', function () {
-
             return Inertia::render('dashboard');
-
         })->name('dashboard');
 
     });
 
 
 // ==================================================
-// 5. ADMINISZTRÁCIÓS ÚTVONALAK
+// 7. ADMINISZTRÁCIÓ - CSAK ADMIN
 // ==================================================
-
-// Csak bejelentkezett adminisztrátoroknak.
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-        // ADMIN FŐOLDAL
-        //
-        // React:
-        // resources/js/pages/admin/index.tsx
-
         Route::get('/', function () {
-
             return Inertia::render('admin/index');
-
         })->name('index');
 
-        // A későbbi admin CRUD útvonalakat
-        // ebben a védett csoportban hozzuk létre.
+        // Később ide kerül a klubok CRUD.
 
     });
 
 
 // ==================================================
-// 6. FELHASZNÁLÓI BEÁLLÍTÁSOK
+// 8. LARAVEL FELHASZNÁLÓI BEÁLLÍTÁSOK
 // ==================================================
 
 require __DIR__ . '/settings.php';
 
 
 // ==================================================
-// 7. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
+// 9. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
 // ==================================================
 
 require __DIR__ . '/auth.php';
