@@ -1,23 +1,20 @@
-
 import { Head, Link } from '@inertiajs/react';
 import Nb1Layout from '../../layouts/nb1-layout';
 
 /*
 |--------------------------------------------------------------------------
-| NB I. - Adminisztrációs főoldal
+| NB I. - ADMINISZTRÁCIÓS FŐOLDAL
 |--------------------------------------------------------------------------
 |
-| Laravel 12 + React + TypeScript
-| Inertia.js + Tailwind CSS
+| Laravel 12 + React + TypeScript + Inertia.js
 |
 | Funkciók:
-| - Adminisztrációs főoldal
-| - Klubok áttekintése
-| - Labdarúgók áttekintése
-| - Posztok modul előkészítése
-| - Közös NB I. Layout
+| - Adminisztrációs központ
+| - Klubok teljes CRUD kezelése
+| - Nyilvános klub- és játékoslista elérése
+| - Navigáció a főoldalra
 |
-| A CRUD-funkciókat külön készítjük el.
+| Hozzáférés: auth + admin middleware
 |
 */
 
@@ -25,57 +22,61 @@ interface AdminCard {
     title: string;
     description: string;
     icon: string;
-    href: string | null;
+    href: string;
     action: string;
+    primary: boolean;
 }
 
 const adminCards: AdminCard[] = [
     {
-        title: 'Klubok',
+        title: 'Klubok kezelése',
         description:
-            'A bajnokságban szereplő klubok adatainak áttekintése.',
+            'Klubok létrehozása, listázása, szerkesztése ' +
+            'és törlése. Teljes adminisztrátori CRUD.',
         icon: '🏆',
+        href: '/admin/klubok',
+        action: 'CRUD megnyitása',
+        primary: true,
+    },
+    {
+        title: 'Klubok megtekintése',
+        description:
+            'A bajnokság klubjainak nyilvános, ' +
+            'kereshető adatbázisa.',
+        icon: '📋',
         href: '/klubok',
         action: 'Klublista megnyitása',
+        primary: false,
     },
     {
         title: 'Labdarúgók',
         description:
-            'Játékosok, klubtagságok, posztok és piaci értékek áttekintése.',
+            'Játékosok, klubtagságok, posztok ' +
+            'és a nyilvántartott játékosadatok.',
         icon: '⚽',
         href: '/labdarugok',
         action: 'Játékoslista megnyitása',
-    },
-    {
-        title: 'Posztok',
-        description:
-            'A labdarúgó-posztok adminisztrációs felületének előkészítése.',
-        icon: '📋',
-        href: null,
-        action: 'Hamarosan',
+        primary: false,
     },
 ];
 
 export default function AdminIndex() {
     return (
         <Nb1Layout>
+
             <Head title="NB I. | Adminisztráció" />
 
-            {/* =====================================
-                ADMIN FEJLÉC
-            ===================================== */}
+            {/* ADMIN FEJLÉC */}
 
             <section className="border-b border-white/10 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950">
 
                 <div className="mx-auto max-w-7xl px-6 py-16">
 
-                    {/* MORZSANAVIGÁCIÓ */}
-
                     <div className="mb-6 flex items-center gap-2 text-sm text-slate-400">
 
                         <Link
                             href="/"
-                            className="transition hover:text-emerald-400"
+                            className="hover:text-emerald-400"
                         >
                             Főoldal
                         </Link>
@@ -88,11 +89,8 @@ export default function AdminIndex() {
 
                     </div>
 
-                    {/* ADMIN JELÖLÉS */}
-
-                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-5 py-2 text-xs font-bold uppercase tracking-wider text-emerald-400">
-                        <span>🛡️</span>
-                        Adminisztrátori felület
+                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-5 py-2 text-xs font-bold uppercase tracking-widest text-emerald-400">
+                        🛡️ Adminisztrátori felület
                     </span>
 
                     <h1 className="mt-7 text-4xl font-black tracking-tight text-white sm:text-5xl">
@@ -110,18 +108,35 @@ export default function AdminIndex() {
                         adatainak adminisztrációs központja.
                     </p>
 
+                    <div className="mt-8 flex flex-wrap gap-4">
+
+                        <Link
+                            href="/admin/klubok"
+                            className="inline-flex items-center rounded-xl bg-emerald-600 px-7 py-4 font-bold text-white transition hover:bg-emerald-500"
+                        >
+                            ⚙️ Klubok kezelése
+                        </Link>
+
+                        <Link
+                            href="/"
+                            className="inline-flex items-center rounded-xl border border-emerald-500/40 px-7 py-4 font-bold text-emerald-400 transition hover:border-emerald-400 hover:bg-emerald-500/10"
+                        >
+                            ← Vissza a főoldalra
+                        </Link>
+
+                    </div>
+
                 </div>
+
             </section>
 
-            {/* =====================================
-                ADMIN FŐ TARTALOM
-            ===================================== */}
+            {/* ADMIN TARTALOM */}
 
-            <section className="bg-slate-950 px-4 py-12 sm:px-6">
+            <section className="bg-slate-950 px-4 py-14 sm:px-6">
 
                 <div className="mx-auto max-w-7xl">
 
-                    {/* ÜDVÖZLŐ BLOKK */}
+                    {/* ÜDVÖZLŐ RÉSZ */}
 
                     <div className="mb-10 rounded-2xl border border-emerald-500/20 bg-slate-900 p-7 shadow-xl">
 
@@ -134,13 +149,13 @@ export default function AdminIndex() {
                                 </h2>
 
                                 <p className="mt-3 max-w-2xl leading-7 text-slate-400">
-                                    Itt érheted el a klubok és
-                                    labdarúgók listáját.
+                                    Innen érheted el az NB I.
+                                    klubok kezelését.
 
-                                    Az adatok létrehozását,
-                                    szerkesztését és törlését
-                                    a következő fejlesztési
-                                    lépésekben építjük be.
+                                    Új klubot hozhatsz létre,
+                                    módosíthatod a meglévő
+                                    klubneveket, és törölheted
+                                    a játékosok nélküli klubokat.
                                 </p>
 
                             </div>
@@ -153,18 +168,16 @@ export default function AdminIndex() {
 
                     </div>
 
-                    {/* =====================================
-                        ADMIN MODULOK
-                    ===================================== */}
+                    {/* ADMIN MODULOK */}
 
                     <div className="mb-7">
 
                         <h2 className="text-2xl font-black text-white">
-                            Kezelhető adatok
+                            Adminisztrációs modulok
                         </h2>
 
                         <p className="mt-2 text-slate-400">
-                            Válassz az adatbázis fő területei közül.
+                            Válaszd ki a használni kívánt funkciót.
                         </p>
 
                     </div>
@@ -175,49 +188,41 @@ export default function AdminIndex() {
 
                             <article
                                 key={card.title}
-                                className="flex flex-col rounded-2xl border border-white/10 bg-slate-900 p-8 shadow-xl transition hover:border-emerald-500/50"
+                                className={
+                                    'flex flex-col rounded-2xl border bg-slate-900 p-8 shadow-xl transition ' +
+                                    (
+                                        card.primary
+                                            ? 'border-emerald-500/50'
+                                            : 'border-white/10 hover:border-emerald-500/40'
+                                    )
+                                }
                             >
 
-                                {/* MODUL IKON */}
-
-                                <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-4xl">
+                                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-4xl">
                                     {card.icon}
                                 </div>
-
-                                {/* MODUL NEVE */}
 
                                 <h3 className="text-2xl font-bold text-white">
                                     {card.title}
                                 </h3>
 
-                                {/* MODUL LEÍRÁSA */}
-
                                 <p className="mt-4 flex-1 leading-7 text-slate-400">
                                     {card.description}
                                 </p>
 
-                                {/* MODUL MEGNYITÁSA */}
-
-                                <div className="mt-8">
-
-                                    {card.href ? (
-
-                                        <Link
-                                            href={card.href}
-                                            className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-500"
-                                        >
-                                            {card.action}
-                                        </Link>
-
-                                    ) : (
-
-                                        <span className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl border border-slate-700 bg-slate-800 px-5 py-3 font-semibold text-slate-500">
-                                            {card.action}
-                                        </span>
-
-                                    )}
-
-                                </div>
+                                <Link
+                                    href={card.href}
+                                    className={
+                                        'mt-8 inline-flex w-full items-center justify-center rounded-xl px-5 py-3 font-bold transition ' +
+                                        (
+                                            card.primary
+                                                ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                                                : 'border border-emerald-500/40 text-emerald-400 hover:bg-emerald-600 hover:text-white'
+                                        )
+                                    }
+                                >
+                                    {card.action} →
+                                </Link>
 
                             </article>
 
@@ -225,9 +230,7 @@ export default function AdminIndex() {
 
                     </div>
 
-                    {/* =====================================
-                        JOGOSULTSÁG INFORMÁCIÓ
-                    ===================================== */}
+                    {/* JOGOSULTSÁGOK */}
 
                     <div className="mt-10 rounded-2xl border border-white/10 bg-slate-900 p-7">
 
@@ -244,14 +247,13 @@ export default function AdminIndex() {
                                 </h3>
 
                                 <p className="mt-3 leading-7 text-slate-400">
-                                    Az adminisztrációs útvonalak
-                                    hozzáférését a Laravel
-                                    AdminMiddleware ellenőrzi.
+                                    A CRUD műveleteit a Laravel
+                                    szerveroldalon, adminisztrátori
+                                    jogosultság alapján védi.
 
                                     A nyilvános klub- és
-                                    játékoslisták minden
-                                    látogató számára
-                                    elérhetők maradnak.
+                                    labdarúgólisták minden
+                                    látogató számára elérhetők.
                                 </p>
 
                             </div>
@@ -260,11 +262,7 @@ export default function AdminIndex() {
 
                     </div>
 
-                    {/* =====================================
-                        VISSZA A FŐOLDALRA
-                    ===================================== */}
-
-                    <div className="mt-12 text-center">
+                    <div className="mt-10 text-center">
 
                         <Link
                             href="/"
@@ -278,6 +276,7 @@ export default function AdminIndex() {
                 </div>
 
             </section>
+
         </Nb1Layout>
     );
 }

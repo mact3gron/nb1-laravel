@@ -1,26 +1,37 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
+/*
+|--------------------------------------------------------------------------
+| NB I. - INERTIA MIDDLEWARE
+|--------------------------------------------------------------------------
+|
+| Laravel 12 + React + TypeScript + Inertia.js
+|
+| Feladata:
+| - Alkalmazás neve
+| - Eredeti Laravel idézetadatok
+| - Bejelentkezett felhasználó átadása
+| - Adminjogosultság elérhetővé tétele
+| - Sikeres és sikertelen műveletek visszajelzése
+|
+*/
+
 class HandleInertiaRequests extends Middleware
 {
     /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
+     * Laravel alapnézet.
      *
      * @var string
      */
     protected $rootView = 'app';
 
     /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
+     * Frontend állományok verziója.
      */
     public function version(Request $request): ?string
     {
@@ -28,23 +39,47 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
+     * Globálisan megosztott Inertia adatok.
      *
      * @return array<string, mixed>
      */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+        // Az eredeti starter kit idézetei
+        [$message, $author] = str(
+            Inspiring::quotes()->random()
+        )->explode('-');
 
-        return array_merge(parent::share($request), [
-            ...parent::share($request),
-            'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
-            'auth' => [
-                'user' => $request->user(),
-            ],
-        ]);
+        return array_merge(
+            parent::share($request),
+            [
+                // Alkalmazás neve
+                'name' => config('app.name'),
+
+                // Eredeti idézetadatok megtartása
+                'quote' => [
+                    'message' => trim($message),
+                    'author' => trim($author),
+                ],
+
+                // Bejelentkezett felhasználó
+                'auth' => [
+                    'user' => $request->user(),
+                ],
+
+                // Sikeres és sikertelen műveletek
+                'flash' => [
+                    'success' => fn () =>
+                        $request->session()->get(
+                            'success'
+                        ),
+
+                    'error' => fn () =>
+                        $request->session()->get(
+                            'error'
+                        ),
+                ],
+            ]
+        );
     }
 }
