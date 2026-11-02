@@ -3,26 +3,19 @@ import { useState, type ReactNode } from 'react';
 
 /*
 |--------------------------------------------------------------------------
-| NB I. - KÖZÖS OLDAL ELRENDEZÉS
+| NB I. - KÖZÖS REACT LAYOUT
 |--------------------------------------------------------------------------
 |
 | Laravel 12 + React + TypeScript + Inertia.js
 |
 | Vendég:
-| - Főoldal
-| - Adatbázis
-| - Kapcsolat
-| - Diagram
-| - Bejelentkezés
-| - Regisztráció
+| - Főoldal, Adatbázis, Kapcsolat, Diagram
 |
-| Regisztrált felhasználó:
-| - Üzenetek
-| - Dashboard
+| Bejelentkezett felhasználó:
+| - Fentiek + Üzenetek, Dashboard
 |
-| Admin:
-| - Adminpanel
-| - CRUD (következő fejlesztés)
+| Adminisztrátor:
+| - Fentiek + Admin, Klub CRUD
 |
 */
 
@@ -47,20 +40,14 @@ export default function Nb1Layout({
 
     const { url, props } = usePage();
 
-    const [mobileOpen, setMobileOpen] =
-        useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     const auth = props.auth as AuthData | undefined;
     const user = auth?.user ?? null;
 
     const isAdmin = user?.is_admin === true;
 
-    // ======================================
-    // AKTÍV MENÜPONT ELLENŐRZÉSE
-    // ======================================
-
     function isActive(path: string): boolean {
-
         const current = url.split('?')[0];
 
         if (path === '/') {
@@ -74,7 +61,6 @@ export default function Nb1Layout({
     }
 
     function navClass(path: string): string {
-
         return (
             'text-sm font-semibold transition-colors ' +
             (
@@ -92,9 +78,7 @@ export default function Nb1Layout({
     return (
         <div className="flex min-h-screen flex-col bg-slate-950 text-white">
 
-            {/* ======================================
-                FEJLÉC
-            ====================================== */}
+            {/* FEJLÉC */}
 
             <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/95 shadow-lg backdrop-blur-lg">
 
@@ -116,16 +100,12 @@ export default function Nb1Layout({
                         </span>
                     </Link>
 
-                    {/* ==================================
-                        ASZTALI NAVIGÁCIÓ
-                    ================================== */}
+                    {/* ASZTALI NAVIGÁCIÓ */}
 
                     <nav
                         aria-label="Fő navigáció"
                         className="hidden items-center gap-4 xl:flex"
                     >
-
-                        {/* FŐOLDAL */}
 
                         <Link
                             href="/"
@@ -162,7 +142,7 @@ export default function Nb1Layout({
 
                         </details>
 
-                        {/* KAPCSOLAT */}
+                        {/* KAPCSOLAT - NYILVÁNOS */}
 
                         <Link
                             href="/kapcsolat"
@@ -180,6 +160,24 @@ export default function Nb1Layout({
                             Diagram
                         </Link>
 
+                        {/* CSAPATERŐSSÉG - NYILVÁNOS */}
+
+                        <Link
+                            href="/csapatstatisztika"
+                            className={navClass('/csapatstatisztika')}
+                        >
+                            Csapaterősség
+                        </Link>
+
+                        {/* CSAPATOK ÖSSZEHASONLÍTÁSA - NYILVÁNOS */}
+
+                        <Link
+                            href="/csapat-osszehasonlitas"
+                            className={navClass('/csapat-osszehasonlitas')}
+                        >
+                            Összehasonlítás
+                        </Link>
+
                         {/* ÜZENETEK - BEJELENTKEZVE */}
 
                         {user && (
@@ -191,20 +189,36 @@ export default function Nb1Layout({
                             </Link>
                         )}
 
-                        {/* ADMIN */}
+                        {/* ADMINISZTRÁTORI MENÜ */}
 
                         {isAdmin && (
                             <>
-                                <span
-                                    title="Fejlesztés alatt"
-                                    className="cursor-not-allowed text-sm text-slate-500"
+                                {/* CRUD - AKTIVÁLVA */}
+
+                                <Link
+                                    href="/admin/klubok"
+                                    className={navClass('/admin/klubok')}
                                 >
                                     CRUD
-                                </span>
+                                </Link>
+
+                                {/* TESZTJELENTÉSEK - ADMIN */}
+
+                                <Link
+                                    href="/admin/teszt"
+                                    className={navClass('/admin/teszt')}
+                                >
+                                    Teszt
+                                </Link>
 
                                 <Link
                                     href="/admin"
-                                    className={navClass('/admin')}
+                                    className={
+                                        isActive('/admin') &&
+                                        !isActive('/admin/klubok')
+                                            ? 'text-sm font-semibold text-emerald-400'
+                                            : 'text-sm font-semibold text-slate-300 hover:text-emerald-400'
+                                    }
                                 >
                                     Admin
                                 </Link>
@@ -213,9 +227,7 @@ export default function Nb1Layout({
 
                     </nav>
 
-                    {/* ==================================
-                        FELHASZNÁLÓI MENÜ
-                    ================================== */}
+                    {/* FIÓKMENÜ */}
 
                     <div className="hidden items-center gap-3 xl:flex">
 
@@ -230,7 +242,7 @@ export default function Nb1Layout({
 
                                 <Link
                                     href="/dashboard"
-                                    className="rounded-lg border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-emerald-600 hover:text-white"
+                                    className="rounded-lg border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-400 hover:bg-emerald-600 hover:text-white"
                                 >
                                     Dashboard
                                 </Link>
@@ -264,9 +276,7 @@ export default function Nb1Layout({
 
                     </div>
 
-                    {/* ==================================
-                        MOBILMENÜ GOMB
-                    ================================== */}
+                    {/* MOBILMENÜ GOMB */}
 
                     <button
                         type="button"
@@ -283,9 +293,7 @@ export default function Nb1Layout({
 
                 </div>
 
-                {/* ======================================
-                    MOBIL NAVIGÁCIÓ
-                ====================================== */}
+                {/* MOBIL NAVIGÁCIÓ */}
 
                 {mobileOpen && (
                     <nav
@@ -296,8 +304,6 @@ export default function Nb1Layout({
 
                         <div className="mx-auto flex max-w-7xl flex-col gap-2">
 
-                            {/* FŐOLDAL */}
-
                             <Link
                                 href="/"
                                 onClick={closeMenu}
@@ -305,8 +311,6 @@ export default function Nb1Layout({
                             >
                                 Főoldal
                             </Link>
-
-                            {/* ADATBÁZIS */}
 
                             <p className="px-4 pt-3 text-xs font-bold uppercase text-emerald-400">
                                 Adatbázis
@@ -328,8 +332,6 @@ export default function Nb1Layout({
                                 Labdarúgók
                             </Link>
 
-                            {/* KAPCSOLAT */}
-
                             <Link
                                 href="/kapcsolat"
                                 onClick={closeMenu}
@@ -337,8 +339,6 @@ export default function Nb1Layout({
                             >
                                 Kapcsolat
                             </Link>
-
-                            {/* DIAGRAM */}
 
                             <Link
                                 href="/diagram"
@@ -348,25 +348,59 @@ export default function Nb1Layout({
                                 Diagram
                             </Link>
 
+                            {/* CSAPATERŐSSÉG - NYILVÁNOS */}
+
+                            <Link
+                                href="/csapatstatisztika"
+                                onClick={closeMenu}
+                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
+                            >
+                                ⚽ Csapaterősség
+                            </Link>
+
+                            {/* KÉT CSAPAT ÖSSZEHASONLÍTÁSA - NYILVÁNOS */}
+
+                            <Link
+                                href="/csapat-osszehasonlitas"
+                                onClick={closeMenu}
+                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
+                            >
+                                ⚽ Összehasonlítás
+                            </Link>
+
                             {/* ÜZENETEK */}
 
                             {user && (
                                 <Link
                                     href="/uzenetek"
                                     onClick={closeMenu}
-                                    className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
+                                    className="rounded-lg px-4 py-3 hover:bg-slate-800"
                                 >
                                     Üzenetek
                                 </Link>
                             )}
 
-                            {/* ADMIN */}
+                            {/* ADMIN - MOBILON IS */}
 
                             {isAdmin && (
                                 <>
-                                    <span className="px-4 py-3 text-sm text-slate-500">
-                                        CRUD – Hamarosan
-                                    </span>
+                                    <Link
+                                        href="/admin/klubok"
+                                        onClick={closeMenu}
+                                        className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
+                                    >
+                                        ⚙️ Klubok CRUD
+                                    </Link>
+
+                                    {/* TESZTJELENTÉSEK - ADMIN */}
+
+                                    <Link
+                                        href="/admin/teszt"
+                                        onClick={closeMenu}
+                                        className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
+                                    >
+                                        🧪 Teszt
+                                    </Link>
 
                                     <Link
                                         href="/admin"
@@ -380,7 +414,7 @@ export default function Nb1Layout({
 
                             <div className="my-3 border-t border-white/10" />
 
-                            {/* FIÓK */}
+                            {/* MOBIL FIÓKMENÜ */}
 
                             {user ? (
                                 <>
@@ -400,7 +434,7 @@ export default function Nb1Layout({
                                         href="/logout"
                                         method="post"
                                         as="button"
-                                        className="cursor-pointer rounded-lg bg-red-700 px-4 py-3 text-left font-semibold"
+                                        className="cursor-pointer rounded-lg bg-red-700 px-4 py-3 text-left font-semibold text-white"
                                     >
                                         Kijelentkezés
                                     </Link>
@@ -418,7 +452,7 @@ export default function Nb1Layout({
                                     <Link
                                         href="/register"
                                         onClick={closeMenu}
-                                        className="rounded-lg bg-emerald-600 px-4 py-3 font-semibold"
+                                        className="rounded-lg bg-emerald-600 px-4 py-3 font-semibold text-white"
                                     >
                                         Regisztráció
                                     </Link>
@@ -432,42 +466,37 @@ export default function Nb1Layout({
 
             </header>
 
-            {/* ======================================
-                OLDAL TARTALMA
-            ====================================== */}
+            {/* OLDAL TARTALMA */}
 
             <main className="min-w-0 flex-1">
                 {children}
             </main>
 
-            {/* ======================================
-                KÖZÖS LÁBLÉC
-            ====================================== */}
+            {/* KÖZÖS LÁBLÉC */}
 
             <footer className="border-t border-white/10 bg-black/50">
 
                 <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:grid-cols-3">
 
-                    {/* PROJEKT */}
-
                     <section>
+
                         <h2 className="text-xl font-black text-emerald-400">
                             NB I. LABDARÚGÁS
                         </h2>
 
                         <p className="mt-3 text-sm leading-6 text-slate-400">
-                            Magyar labdarúgóklubok és
-                            játékosok adatbázisa.
+                            Magyar labdarúgóklubok
+                            és játékosok adatbázisa.
                         </p>
 
                         <p className="mt-3 text-sm text-slate-500">
                             Webprogramozás II. – Előadás beadandó
                         </p>
+
                     </section>
 
-                    {/* KÉSZÍTŐK */}
-
                     <section>
+
                         <h2 className="font-bold text-white">
                             Készítette:
                         </h2>
@@ -479,11 +508,11 @@ export default function Nb1Layout({
                         <p className="mt-2 text-sm text-slate-400">
                             Fodor Árpád – U4BKST
                         </p>
+
                     </section>
 
-                    {/* TECHNOLÓGIÁK */}
-
                     <section>
+
                         <h2 className="font-bold text-white">
                             Technológiák
                         </h2>
@@ -508,6 +537,7 @@ export default function Nb1Layout({
                         >
                             ← Vissza a főoldalra
                         </Link>
+
                     </section>
 
                 </div>
