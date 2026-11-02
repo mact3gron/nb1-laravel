@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminKlubController;
 use App\Http\Controllers\CsapatStatisztikaController;
 use App\Http\Controllers\CsapatOsszehasonlitasController;
 use App\Http\Controllers\TesztController;
+use App\Http\Controllers\ReactPosztController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +37,7 @@ use App\Http\Controllers\TesztController;
 | - Adminpanel
 | - Klubok CRUD
 | - Tesztjelentések
+| - React + Axios Poszt CRUD
 |
 */
 
@@ -245,6 +247,108 @@ Route::middleware(['auth', 'admin'])
             TesztController::class,
             'index',
         ])->name('teszt.index');
+
+
+        // ==================================
+        // REACT + AXIOS POSZT CRUD - ADMIN
+        // ==================================
+
+        /*
+        |--------------------------------------------------------------------------
+        | REACT + AXIOS CRUD VÉGPONTOK
+        |--------------------------------------------------------------------------
+        |
+        | A meglévő "poszt" adatbázistáblával
+        | dolgozunk.
+        |
+        | A React felület külön Axios
+        | HTTP-kéréseket küld a Laravelnek.
+        |
+        | Minden műveletet az auth + admin
+        | middleware véd.
+        |
+        | GET     - React oldal
+        | GET     - JSON-adatok lekérdezése
+        | POST    - Új poszt létrehozása
+        | PUT     - Poszt módosítása
+        | DELETE  - Poszt törlése
+        |
+        */
+
+
+        // ----------------------------------
+        // REACT OLDAL MEGJELENÍTÉSE
+        // ----------------------------------
+
+        Route::get('/react-posztok', [
+            ReactPosztController::class,
+            'index',
+        ])->name('react-posztok.index');
+
+
+        // ----------------------------------
+        // READ - JSON-ADATOK LEKÉRÉSE
+        // ----------------------------------
+
+        // GET /admin/react-posztok/adatok
+        //
+        // A React az Axios segítségével
+        // innen tölti be a posztok listáját.
+        //
+        // Keresés és lapozás is támogatott.
+
+        Route::get('/react-posztok/adatok', [
+            ReactPosztController::class,
+            'adatok',
+        ])->name('react-posztok.adatok');
+
+
+        // ----------------------------------
+        // CREATE - ÚJ POSZT
+        // ----------------------------------
+
+        // POST /admin/react-posztok
+        //
+        // JSON-adatok fogadása.
+        // Laravel szerveroldali validáció.
+
+        Route::post('/react-posztok', [
+            ReactPosztController::class,
+            'store',
+        ])->name('react-posztok.store');
+
+
+        // ----------------------------------
+        // UPDATE - POSZT MÓDOSÍTÁSA
+        // ----------------------------------
+
+        // PUT /admin/react-posztok/{poszt}
+        //
+        // Laravel Eloquent modellkötés.
+        // A {poszt} paraméter a Poszt
+        // modell megfelelő rekordja.
+
+        Route::put('/react-posztok/{poszt}', [
+            ReactPosztController::class,
+            'update',
+        ])->name('react-posztok.update');
+
+
+        // ----------------------------------
+        // DELETE - POSZT TÖRLÉSE
+        // ----------------------------------
+
+        // DELETE /admin/react-posztok/{poszt}
+        //
+        // A Controller ellenőrzi, hogy
+        // tartozik-e játékos a poszthoz.
+        //
+        // Ha igen, a törlést megtagadja.
+
+        Route::delete('/react-posztok/{poszt}', [
+            ReactPosztController::class,
+            'destroy',
+        ])->name('react-posztok.destroy');
 
     });
 

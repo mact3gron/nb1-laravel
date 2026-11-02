@@ -16,6 +16,8 @@ import { useState, type ReactNode } from 'react';
 |
 | Adminisztrátor:
 | - Fentiek + Admin, Klub CRUD
+| - Teszt menü
+| - React + Axios Poszt CRUD
 |
 */
 
@@ -193,13 +195,22 @@ export default function Nb1Layout({
 
                         {isAdmin && (
                             <>
-                                {/* CRUD - AKTIVÁLVA */}
+                                {/* KLUB CRUD */}
 
                                 <Link
                                     href="/admin/klubok"
                                     className={navClass('/admin/klubok')}
                                 >
                                     CRUD
+                                </Link>
+
+                                {/* REACT + AXIOS CRUD - ADMIN */}
+
+                                <Link
+                                    href="/admin/react-posztok"
+                                    className={navClass('/admin/react-posztok')}
+                                >
+                                    React CRUD
                                 </Link>
 
                                 {/* TESZTJELENTÉSEK - ADMIN */}
@@ -211,11 +222,15 @@ export default function Nb1Layout({
                                     Teszt
                                 </Link>
 
+                                {/* ADMIN FŐOLDAL */}
+
                                 <Link
                                     href="/admin"
                                     className={
                                         isActive('/admin') &&
-                                        !isActive('/admin/klubok')
+                                        !isActive('/admin/klubok') &&
+                                        !isActive('/admin/react-posztok') &&
+                                        !isActive('/admin/teszt')
                                             ? 'text-sm font-semibold text-emerald-400'
                                             : 'text-sm font-semibold text-slate-300 hover:text-emerald-400'
                                     }
@@ -384,6 +399,8 @@ export default function Nb1Layout({
 
                             {isAdmin && (
                                 <>
+                                    {/* KLUB CRUD */}
+
                                     <Link
                                         href="/admin/klubok"
                                         onClick={closeMenu}
@@ -392,7 +409,17 @@ export default function Nb1Layout({
                                         ⚙️ Klubok CRUD
                                     </Link>
 
-                                    {/* TESZTJELENTÉSEK - ADMIN */}
+                                    {/* REACT + AXIOS CRUD */}
+
+                                    <Link
+                                        href="/admin/react-posztok"
+                                        onClick={closeMenu}
+                                        className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
+                                    >
+                                        ⚛️ React CRUD
+                                    </Link>
+
+                                    {/* TESZTJELENTÉSEK */}
 
                                     <Link
                                         href="/admin/teszt"
@@ -529,6 +556,8 @@ export default function Nb1Layout({
                             Chart.js
                             <br />
                             Tailwind CSS
+                            <br />
+                            Axios
                         </p>
 
                         <Link
