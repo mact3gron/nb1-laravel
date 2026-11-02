@@ -7,6 +7,7 @@ use App\Http\Controllers\KlubController;
 use App\Http\Controllers\LabdarugoController;
 use App\Http\Controllers\KapcsolatController;
 use App\Http\Controllers\UzenetekController;
+use App\Http\Controllers\DiagramController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,10 +16,12 @@ use App\Http\Controllers\UzenetekController;
 |
 | Laravel 12 + React + TypeScript + Inertia.js
 |
-| Vendégek:
+| Nyilvános:
 | - Főoldal
-| - Adatbázis
+| - Klubok
+| - Labdarúgók
 | - Kapcsolat
+| - Diagram
 |
 | Bejelentkezett felhasználók:
 | - Üzenetek
@@ -44,7 +47,7 @@ Route::get('/', function () {
 
 Route::get('/klubok', [
     KlubController::class,
-    'index'
+    'index',
 ])->name('klubok.index');
 
 
@@ -54,7 +57,7 @@ Route::get('/klubok', [
 
 Route::get('/labdarugok', [
     LabdarugoController::class,
-    'index'
+    'index',
 ])->name('labdarugok.index');
 
 
@@ -62,46 +65,51 @@ Route::get('/labdarugok', [
 // 4. KAPCSOLAT - NYILVÁNOS
 // ==================================================
 
-// Vendégek is megnyithatják az űrlapot.
+// Üzenetküldés regisztráció nélkül is.
 
 Route::get('/kapcsolat', [
     KapcsolatController::class,
-    'index'
+    'index',
 ])->name('kapcsolat.index');
-
-
-// Vendégek is küldhetnek üzenetet.
-// Percenként maximum 5 beküldési kísérlet.
 
 Route::post('/kapcsolat', [
     KapcsolatController::class,
-    'store'
+    'store',
 ])
     ->middleware('throttle:5,1')
     ->name('kapcsolat.store');
 
 
 // ==================================================
-// 5. ÜZENETEK - BEJELENTKEZÉS SZÜKSÉGES
+// 5. DIAGRAM - NYILVÁNOS
 // ==================================================
 
-// FONTOS:
-// Csak auth middleware!
-// A tanári feladat nem ír elő adminjogot
-// az üzenetek megtekintéséhez.
+// Chart.js diagram a MySQL-adatbázis adataiból.
+//
+// Bejelentkezés NEM szükséges.
 
-Route::middleware('auth')->group(function () {
+Route::get('/diagram', [
+    DiagramController::class,
+    'index',
+])->name('diagram.index');
+
+
+// ==================================================
+// 6. ÜZENETEK - CSAK BEJELENTKEZVE
+// ==================================================
+
+Route::middleware(['auth'])->group(function () {
 
     Route::get('/uzenetek', [
         UzenetekController::class,
-        'index'
+        'index',
     ])->name('uzenetek.index');
 
 });
 
 
 // ==================================================
-// 6. DASHBOARD - BEJELENTKEZETT FELHASZNÁLÓ
+// 7. DASHBOARD
 // ==================================================
 
 Route::middleware(['auth', 'verified'])
@@ -115,7 +123,7 @@ Route::middleware(['auth', 'verified'])
 
 
 // ==================================================
-// 7. ADMINISZTRÁCIÓ - CSAK ADMIN
+// 8. ADMINISZTRÁCIÓ - CSAK ADMIN
 // ==================================================
 
 Route::middleware(['auth', 'admin'])
@@ -127,20 +135,20 @@ Route::middleware(['auth', 'admin'])
             return Inertia::render('admin/index');
         })->name('index');
 
-        // Később ide kerül a klubok CRUD.
+        // A CRUD útvonalak később ide kerülnek.
 
     });
 
 
 // ==================================================
-// 8. LARAVEL FELHASZNÁLÓI BEÁLLÍTÁSOK
+// 9. FELHASZNÁLÓI BEÁLLÍTÁSOK
 // ==================================================
 
 require __DIR__ . '/settings.php';
 
 
 // ==================================================
-// 9. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
+// 10. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
 // ==================================================
 
 require __DIR__ . '/auth.php';

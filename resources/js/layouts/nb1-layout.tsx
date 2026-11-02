@@ -8,10 +8,21 @@ import { useState, type ReactNode } from 'react';
 |
 | Laravel 12 + React + TypeScript + Inertia.js
 |
-| Jogosultságok:
-| Vendég: Főoldal, Adatbázis, Kapcsolat
-| Regisztrált: fentiek + Üzenetek
-| Admin: fentiek + Admin és később CRUD
+| Vendég:
+| - Főoldal
+| - Adatbázis
+| - Kapcsolat
+| - Diagram
+| - Bejelentkezés
+| - Regisztráció
+|
+| Regisztrált felhasználó:
+| - Üzenetek
+| - Dashboard
+|
+| Admin:
+| - Adminpanel
+| - CRUD (következő fejlesztés)
 |
 */
 
@@ -36,14 +47,20 @@ export default function Nb1Layout({
 
     const { url, props } = usePage();
 
-    const [mobileOpen, setMobileOpen] = useState(false);
+    const [mobileOpen, setMobileOpen] =
+        useState(false);
 
     const auth = props.auth as AuthData | undefined;
     const user = auth?.user ?? null;
 
     const isAdmin = user?.is_admin === true;
 
+    // ======================================
+    // AKTÍV MENÜPONT ELLENŐRZÉSE
+    // ======================================
+
     function isActive(path: string): boolean {
+
         const current = url.split('?')[0];
 
         if (path === '/') {
@@ -57,6 +74,7 @@ export default function Nb1Layout({
     }
 
     function navClass(path: string): string {
+
         return (
             'text-sm font-semibold transition-colors ' +
             (
@@ -74,7 +92,9 @@ export default function Nb1Layout({
     return (
         <div className="flex min-h-screen flex-col bg-slate-950 text-white">
 
-            {/* FEJLÉC */}
+            {/* ======================================
+                FEJLÉC
+            ====================================== */}
 
             <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/95 shadow-lg backdrop-blur-lg">
 
@@ -96,12 +116,16 @@ export default function Nb1Layout({
                         </span>
                     </Link>
 
-                    {/* ASZTALI NAVIGÁCIÓ */}
+                    {/* ==================================
+                        ASZTALI NAVIGÁCIÓ
+                    ================================== */}
 
                     <nav
                         aria-label="Fő navigáció"
                         className="hidden items-center gap-4 xl:flex"
                     >
+
+                        {/* FŐOLDAL */}
 
                         <Link
                             href="/"
@@ -122,14 +146,14 @@ export default function Nb1Layout({
 
                                 <Link
                                     href="/klubok"
-                                    className="block rounded-lg px-4 py-3 text-sm hover:bg-slate-800 hover:text-emerald-400"
+                                    className="block rounded-lg px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-emerald-400"
                                 >
                                     Klubok
                                 </Link>
 
                                 <Link
                                     href="/labdarugok"
-                                    className="block rounded-lg px-4 py-3 text-sm hover:bg-slate-800 hover:text-emerald-400"
+                                    className="block rounded-lg px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-emerald-400"
                                 >
                                     Labdarúgók
                                 </Link>
@@ -138,7 +162,7 @@ export default function Nb1Layout({
 
                         </details>
 
-                        {/* KAPCSOLAT - MINDENKINEK */}
+                        {/* KAPCSOLAT */}
 
                         <Link
                             href="/kapcsolat"
@@ -147,16 +171,16 @@ export default function Nb1Layout({
                             Kapcsolat
                         </Link>
 
-                        {/* DIAGRAM - KÉSŐBB KÉSZÜL */}
+                        {/* DIAGRAM - NYILVÁNOS */}
 
-                        <span
-                            title="Fejlesztés alatt"
-                            className="cursor-not-allowed text-sm text-slate-500"
+                        <Link
+                            href="/diagram"
+                            className={navClass('/diagram')}
                         >
                             Diagram
-                        </span>
+                        </Link>
 
-                        {/* ÜZENETEK - CSAK BEJELENTKEZVE */}
+                        {/* ÜZENETEK - BEJELENTKEZVE */}
 
                         {user && (
                             <Link
@@ -167,7 +191,7 @@ export default function Nb1Layout({
                             </Link>
                         )}
 
-                        {/* ADMIN MENÜ */}
+                        {/* ADMIN */}
 
                         {isAdmin && (
                             <>
@@ -189,7 +213,9 @@ export default function Nb1Layout({
 
                     </nav>
 
-                    {/* FELHASZNÁLÓI MENÜ */}
+                    {/* ==================================
+                        FELHASZNÁLÓI MENÜ
+                    ================================== */}
 
                     <div className="hidden items-center gap-3 xl:flex">
 
@@ -238,7 +264,9 @@ export default function Nb1Layout({
 
                     </div>
 
-                    {/* MOBILMENÜ GOMB */}
+                    {/* ==================================
+                        MOBILMENÜ GOMB
+                    ================================== */}
 
                     <button
                         type="button"
@@ -248,12 +276,16 @@ export default function Nb1Layout({
                         onClick={() => setMobileOpen(!mobileOpen)}
                         className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold xl:hidden"
                     >
-                        {mobileOpen ? '✕ Bezárás' : '☰ Menü'}
+                        {mobileOpen
+                            ? '✕ Bezárás'
+                            : '☰ Menü'}
                     </button>
 
                 </div>
 
-                {/* MOBILMENÜ */}
+                {/* ======================================
+                    MOBIL NAVIGÁCIÓ
+                ====================================== */}
 
                 {mobileOpen && (
                     <nav
@@ -264,6 +296,8 @@ export default function Nb1Layout({
 
                         <div className="mx-auto flex max-w-7xl flex-col gap-2">
 
+                            {/* FŐOLDAL */}
+
                             <Link
                                 href="/"
                                 onClick={closeMenu}
@@ -271,6 +305,8 @@ export default function Nb1Layout({
                             >
                                 Főoldal
                             </Link>
+
+                            {/* ADATBÁZIS */}
 
                             <p className="px-4 pt-3 text-xs font-bold uppercase text-emerald-400">
                                 Adatbázis
@@ -292,7 +328,7 @@ export default function Nb1Layout({
                                 Labdarúgók
                             </Link>
 
-                            {/* KAPCSOLAT - VENDÉGNEK IS */}
+                            {/* KAPCSOLAT */}
 
                             <Link
                                 href="/kapcsolat"
@@ -302,11 +338,17 @@ export default function Nb1Layout({
                                 Kapcsolat
                             </Link>
 
-                            <span className="px-4 py-3 text-sm text-slate-500">
-                                Diagram – Hamarosan
-                            </span>
+                            {/* DIAGRAM */}
 
-                            {/* ÜZENETEK - BEJELENTKEZVE */}
+                            <Link
+                                href="/diagram"
+                                onClick={closeMenu}
+                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
+                            >
+                                Diagram
+                            </Link>
+
+                            {/* ÜZENETEK */}
 
                             {user && (
                                 <Link
@@ -390,17 +432,23 @@ export default function Nb1Layout({
 
             </header>
 
-            {/* OLDAL TARTALMA */}
+            {/* ======================================
+                OLDAL TARTALMA
+            ====================================== */}
 
             <main className="min-w-0 flex-1">
                 {children}
             </main>
 
-            {/* KÖZÖS LÁBLÉC */}
+            {/* ======================================
+                KÖZÖS LÁBLÉC
+            ====================================== */}
 
             <footer className="border-t border-white/10 bg-black/50">
 
                 <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:grid-cols-3">
+
+                    {/* PROJEKT */}
 
                     <section>
                         <h2 className="text-xl font-black text-emerald-400">
@@ -417,6 +465,8 @@ export default function Nb1Layout({
                         </p>
                     </section>
 
+                    {/* KÉSZÍTŐK */}
+
                     <section>
                         <h2 className="font-bold text-white">
                             Készítette:
@@ -431,6 +481,8 @@ export default function Nb1Layout({
                         </p>
                     </section>
 
+                    {/* TECHNOLÓGIÁK */}
+
                     <section>
                         <h2 className="font-bold text-white">
                             Technológiák
@@ -444,6 +496,8 @@ export default function Nb1Layout({
                             Inertia.js
                             <br />
                             MySQL
+                            <br />
+                            Chart.js
                             <br />
                             Tailwind CSS
                         </p>
