@@ -125,7 +125,7 @@ export default function LabdarugokIndex({
             return date;
         }
 
-        return `parts[0].{parts[1]}.${parts[2]}.`;
+        return `${parts[0]}.${parts[1]}.${parts[2]}.`;
     }
 
     // Piaci érték euróezerben
@@ -534,5 +534,3 @@ export default function LabdarugokIndex({
         </Nb1Layout>
     );
 }
-
-
