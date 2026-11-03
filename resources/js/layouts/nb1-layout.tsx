@@ -1,26 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
 
-/*
-|--------------------------------------------------------------------------
-| NB I. - KÖZÖS REACT LAYOUT
-|--------------------------------------------------------------------------
-|
-| Laravel 12 + React + TypeScript + Inertia.js
-|
-| Vendég:
-| - Főoldal, Adatbázis, Kapcsolat, Diagram
-|
-| Bejelentkezett felhasználó:
-| - Fentiek + Üzenetek, Dashboard
-|
-| Adminisztrátor:
-| - Fentiek + Admin, Klub CRUD
-| - Teszt menü
-| - React + Axios Poszt CRUD
-|
-*/
-
 interface LayoutProps {
     children: ReactNode;
 }
@@ -29,430 +9,564 @@ interface AuthUser {
     id: number;
     name: string;
     email: string;
-    is_admin?: boolean;
+    is_admin?: boolean | number;
 }
 
 interface AuthData {
     user?: AuthUser | null;
 }
 
+interface MenuItem {
+    label: string;
+    href: string;
+}
+
+const publicMenu: MenuItem[] = [
+    { label: 'Főoldal', href: '/' },
+    { label: 'Klubok', href: '/klubok' },
+    { label: 'Labdarúgók', href: '/labdarugok' },
+    { label: 'Kapcsolat', href: '/kapcsolat' },
+    { label: 'Diagram', href: '/diagram' },
+    { label: 'Csapaterősség', href: '/csapatstatisztika' },
+    { label: 'Összehasonlítás', href: '/csapat-osszehasonlitas' },
+];
+
+const adminMenu: MenuItem[] = [
+    { label: 'Admin főoldal', href: '/admin' },
+    { label: 'Klub CRUD', href: '/admin/klubok' },
+    { label: 'React CRUD', href: '/admin/react-posztok' },
+    { label: 'Tesztek', href: '/admin/teszt' },
+];
+
 export default function Nb1Layout({
     children,
 }: LayoutProps) {
-
     const { url, props } = usePage();
 
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [adminOpen, setAdminOpen] = useState(false);
 
     const auth = props.auth as AuthData | undefined;
     const user = auth?.user ?? null;
 
-    const isAdmin = user?.is_admin === true;
+    const isAdmin =
+        user?.is_admin === true ||
+        user?.is_admin === 1;
+
+    const currentPath = url.split('?')[0];
 
     function isActive(path: string): boolean {
-        const current = url.split('?')[0];
-
         if (path === '/') {
-            return current === '/';
+            return currentPath === '/';
         }
 
         return (
-            current === path ||
-            current.startsWith(path + '/')
+            currentPath === path ||
+            currentPath.startsWith(path + '/')
         );
     }
 
-    function navClass(path: string): string {
-        return (
-            'text-sm font-semibold transition-colors ' +
-            (
-                isActive(path)
-                    ? 'text-emerald-400'
-                    : 'text-slate-300 hover:text-emerald-400'
-            )
-        );
-    }
-
-    function closeMenu(): void {
+    function closeMenus(): void {
         setMobileOpen(false);
+        setAdminOpen(false);
+    }
+
+    function renderMenuLink(item: MenuItem) {
+        return (
+            <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeMenus}
+                className={
+                    isActive(item.href)
+                        ? 'nb1-nav-link nb1-nav-active'
+                        : 'nb1-nav-link'
+                }
+                aria-current={
+                    currentPath === item.href
+                        ? 'page'
+                        : undefined
+                }
+            >
+                {item.label}
+            </Link>
+        );
     }
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-950 text-white">
+        <div className="nb1-layout">
+            <style>{`
+                .nb1-layout {
+                    --nb1-green: #176b43;
+                    --nb1-green-hover: #218957;
+                    --nb1-dark: #16271e;
+                    --nb1-light: #e4f0e8;
+                    --nb1-background: #f3f7f4;
+                    --nb1-gold: #d49a23;
+
+                    min-height: 100vh;
+                    display: flex;
+                    flex-direction: column;
+                    background: var(--nb1-background);
+                    color: var(--nb1-dark);
+                }
+
+                .nb1-layout *,
+                .nb1-layout *::before,
+                .nb1-layout *::after {
+                    box-sizing: border-box;
+                }
+
+                /* FEJLÉC */
+
+                .nb1-layout .nb1-site-header {
+                    position: relative;
+                    z-index: 50;
+                    width: 100%;
+                    padding: 0;
+                    background: #fff;
+                    border-bottom: 1px solid #dce8df;
+                    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.04);
+                }
+
+                .nb1-layout .nb1-header-container {
+                    width: 100%;
+                    max-width: 1320px;
+                    margin: 0 auto;
+                    padding: 0 28px;
+                }
+
+                .nb1-layout .nb1-brand-area {
+                    padding: 28px 0 20px;
+                    text-align: center;
+                }
+
+                .nb1-layout .nb1-brand {
+                    display: inline-block;
+                    padding: 0;
+                    margin: 0;
+                    background: none;
+                    border: none;
+                    color: var(--nb1-dark) !important;
+                    font-size: clamp(27px, 3vw, 39px);
+                    font-weight: 900;
+                    line-height: 1.2;
+                    letter-spacing: -0.8px;
+                    text-decoration: none !important;
+                }
+
+                .nb1-layout .nb1-brand:hover {
+                    color: var(--nb1-green) !important;
+                }
+
+                .nb1-layout .nb1-brand-subtitle {
+                    margin: 8px 0 0;
+                    padding: 0;
+                    color: #667a6d;
+                    font-size: 13px;
+                    line-height: 1.5;
+                }
+
+                /* NAVIGÁCIÓ */
+
+                .nb1-layout .nb1-navigation-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 18px;
+                    min-height: 67px;
+                    border-top: 1px solid #edf1ed;
+                }
+
+                .nb1-layout .nb1-navigation {
+                    display: flex;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 3px;
+                    min-width: 0;
+                    padding: 10px 0;
+                    margin: 0;
+                }
+
+                .nb1-layout .nb1-nav-link {
+                    display: inline-flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 39px;
+                    padding: 10px 12px;
+                    margin: 0;
+                    border: 0;
+                    border-radius: 6px;
+                    background: transparent;
+                    color: #4a5d51 !important;
+                    font-size: 13px;
+                    font-weight: 700;
+                    line-height: 1.4;
+                    font-style: normal;
+                    text-decoration: none !important;
+                    white-space: nowrap;
+                    transition:
+                        background 0.2s ease,
+                        color 0.2s ease;
+                }
+
+                .nb1-layout .nb1-nav-link:hover {
+                    background: var(--nb1-light);
+                    color: var(--nb1-green) !important;
+                }
+
+                .nb1-layout .nb1-nav-active,
+                .nb1-layout .nb1-nav-active:hover {
+                    background: var(--nb1-green);
+                    color: #ffffff !important;
+                }
+
+                /* ADMIN LEGÖRDÜLŐ */
+
+                .nb1-layout .nb1-admin-dropdown {
+                    position: relative;
+                }
+
+                .nb1-layout .nb1-admin-toggle {
+                    cursor: pointer;
+                    font-family: inherit;
+                }
+
+                .nb1-layout .nb1-admin-dropdown-menu {
+                    position: absolute;
+                    top: calc(100% + 8px);
+                    left: 0;
+                    z-index: 100;
+                    display: flex;
+                    flex-direction: column;
+                    min-width: 210px;
+                    padding: 8px;
+                    background: #fff;
+                    border: 1px solid #dce8df;
+                    border-radius: 8px;
+                    box-shadow: 0 14px 30px rgba(0,0,0,.12);
+                }
+
+                .nb1-layout .nb1-admin-dropdown-menu
+                .nb1-nav-link {
+                    justify-content: flex-start;
+                    width: 100%;
+                }
+
+                /* FIÓK */
+
+                .nb1-layout .nb1-account-actions {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    flex-shrink: 0;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+
+                .nb1-layout .nb1-account-name {
+                    color: #65796c;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+
+                .nb1-layout .nb1-account-button {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 39px;
+                    padding: 9px 15px;
+                    margin: 0;
+                    border-radius: 6px;
+                    font-family: inherit;
+                    font-size: 13px;
+                    font-weight: 800;
+                    line-height: 1.4;
+                    text-align: center;
+                    text-decoration: none !important;
+                    white-space: nowrap;
+                    cursor: pointer;
+                    transition: background 0.2s ease;
+                }
+
+                .nb1-layout .nb1-account-outline {
+                    background: #fff;
+                    border: 1px solid var(--nb1-green);
+                    color: var(--nb1-green) !important;
+                }
+
+                .nb1-layout .nb1-account-outline:hover {
+                    background: var(--nb1-light);
+                    color: var(--nb1-green) !important;
+                }
+
+                .nb1-layout .nb1-account-primary {
+                    background: var(--nb1-green);
+                    border: 1px solid var(--nb1-green);
+                    color: #fff !important;
+                }
+
+                .nb1-layout .nb1-account-primary:hover {
+                    background: var(--nb1-green-hover);
+                    color: #fff !important;
+                }
+
+                .nb1-layout .nb1-account-dark {
+                    background: var(--nb1-dark);
+                    border: 1px solid var(--nb1-dark);
+                    color: #fff !important;
+                }
+
+                .nb1-layout .nb1-account-dark:hover {
+                    background: #2d4737;
+                    color: #fff !important;
+                }
+
+                /* MOBILMENÜ */
+
+                .nb1-layout .nb1-mobile-menu-button {
+                    display: none;
+                    width: 100%;
+                    margin: 0 0 16px;
+                    padding: 12px 18px;
+                    border: 1px solid var(--nb1-green);
+                    border-radius: 7px;
+                    background: var(--nb1-green);
+                    color: #fff;
+                    font-size: 14px;
+                    font-weight: 800;
+                    cursor: pointer;
+                }
+
+                .nb1-layout .nb1-mobile-navigation {
+                    display: none;
+                    flex-direction: column;
+                    gap: 4px;
+                    padding: 12px 0 20px;
+                    border-top: 1px solid #dce8df;
+                }
+
+                .nb1-layout .nb1-mobile-navigation
+                .nb1-nav-link {
+                    justify-content: flex-start;
+                    width: 100%;
+                    padding: 12px 15px;
+                    white-space: normal;
+                }
+
+                .nb1-layout .nb1-mobile-section-title {
+                    padding: 16px 15px 7px;
+                    color: var(--nb1-green);
+                    font-size: 12px;
+                    font-weight: 900;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                }
+
+                .nb1-layout .nb1-mobile-account {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    padding-top: 16px;
+                    margin-top: 12px;
+                    border-top: 1px solid #dce8df;
+                }
+
+                .nb1-layout .nb1-mobile-account
+                .nb1-account-button {
+                    width: 100%;
+                }
+
+                /* TARTALOM */
+
+                .nb1-layout .nb1-main {
+                    width: 100%;
+                    min-width: 0;
+                    flex: 1;
+                }
+
+                /* LÁBLÉC */
+
+                .nb1-layout .nb1-site-footer {
+                    width: 100%;
+                    padding: 65px 25px 22px;
+                    background: var(--nb1-dark);
+                    color: #d5e3d8;
+                }
+
+                .nb1-layout .nb1-footer-container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                }
+
+                .nb1-layout .nb1-footer-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 45px;
+                }
+
+                .nb1-layout .nb1-footer-heading {
+                    margin: 0 0 22px;
+                    padding: 0;
+                    color: #fff !important;
+                    font-size: 19px;
+                    font-weight: 900;
+                    line-height: 1.3;
+                }
+
+                .nb1-layout .nb1-footer-text {
+                    margin: 0 0 14px;
+                    padding: 0;
+                    color: #d5e3d8 !important;
+                    font-size: 14px;
+                    line-height: 1.8;
+                }
+
+                .nb1-layout .nb1-footer-link {
+                    color: #91dfaf !important;
+                    text-decoration: underline;
+                    text-underline-offset: 3px;
+                }
+
+                .nb1-layout .nb1-footer-link:hover {
+                    color: #fff !important;
+                }
+
+                .nb1-layout .nb1-footer-bottom {
+                    margin-top: 45px;
+                    padding-top: 24px;
+                    border-top: 1px solid rgba(255,255,255,.12);
+                    color: #b8d0be;
+                    font-size: 12px;
+                    line-height: 1.8;
+                    text-align: center;
+                }
+
+                /* KISEBB ASZTALI NÉZET */
+
+                @media (max-width: 1180px) {
+                    .nb1-layout .nb1-navigation-row {
+                        display: none;
+                    }
+
+                    .nb1-layout .nb1-mobile-menu-button {
+                        display: block;
+                    }
+
+                    .nb1-layout .nb1-mobile-navigation {
+                        display: flex;
+                    }
+
+                    .nb1-layout .nb1-mobile-navigation[hidden] {
+                        display: none;
+                    }
+
+                    .nb1-layout .nb1-brand-area {
+                        padding: 22px 0 18px;
+                    }
+                }
+
+                /* MOBIL */
+
+                @media (max-width: 768px) {
+                    .nb1-layout .nb1-header-container {
+                        padding: 0 18px;
+                    }
+
+                    .nb1-layout .nb1-brand {
+                        font-size: 29px;
+                    }
+
+                    .nb1-layout .nb1-brand-subtitle {
+                        font-size: 12px;
+                    }
+
+                    .nb1-layout .nb1-site-footer {
+                        padding: 48px 20px 20px;
+                    }
+
+                    .nb1-layout .nb1-footer-grid {
+                        grid-template-columns: 1fr;
+                        gap: 25px;
+                    }
+
+                    .nb1-layout .nb1-footer-heading {
+                        margin-bottom: 12px;
+                    }
+
+                    .nb1-layout .nb1-footer-bottom {
+                        margin-top: 28px;
+                    }
+                }
+            `}</style>
 
             {/* FEJLÉC */}
 
-            <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/95 shadow-lg backdrop-blur-lg">
+            <header className="nb1-site-header">
+                <div className="nb1-header-container">
 
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-5">
+                    <div className="nb1-brand-area">
+                        <Link
+                            href="/"
+                            className="nb1-brand"
+                            onClick={closeMenus}
+                        >
+                            NB I. Labdarúgás
+                        </Link>
 
-                    {/* LOGÓ */}
-
-                    <Link
-                        href="/"
-                        onClick={closeMenu}
-                        className="shrink-0 text-xl font-black tracking-tight sm:text-2xl"
-                    >
-                        <span className="text-emerald-400">
-                            NB I.
-                        </span>
-
-                        <span className="ml-2 text-white">
-                            LABDARÚGÁS
-                        </span>
-                    </Link>
+                        <p className="nb1-brand-subtitle">
+                            Magyar labdarúgóklubok és játékosok adatbázisa
+                        </p>
+                    </div>
 
                     {/* ASZTALI NAVIGÁCIÓ */}
 
-                    <nav
-                        aria-label="Fő navigáció"
-                        className="hidden items-center gap-4 xl:flex"
-                    >
-
-                        <Link
-                            href="/"
-                            className={navClass('/')}
+                    <div className="nb1-navigation-row">
+                        <nav
+                            className="nb1-navigation"
+                            aria-label="Fő navigáció"
                         >
-                            Főoldal
-                        </Link>
+                            {publicMenu.map(renderMenuLink)}
 
-                        {/* ADATBÁZIS ALMENÜ */}
-
-                        <details className="group relative">
-
-                            <summary className="cursor-pointer list-none text-sm font-semibold text-slate-300 hover:text-emerald-400">
-                                Adatbázis ▾
-                            </summary>
-
-                            <div className="absolute left-0 top-full z-50 min-w-48 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-xl">
-
-                                <Link
-                                    href="/klubok"
-                                    className="block rounded-lg px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-emerald-400"
-                                >
-                                    Klubok
-                                </Link>
-
-                                <Link
-                                    href="/labdarugok"
-                                    className="block rounded-lg px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-emerald-400"
-                                >
-                                    Labdarúgók
-                                </Link>
-
-                            </div>
-
-                        </details>
-
-                        {/* KAPCSOLAT - NYILVÁNOS */}
-
-                        <Link
-                            href="/kapcsolat"
-                            className={navClass('/kapcsolat')}
-                        >
-                            Kapcsolat
-                        </Link>
-
-                        {/* DIAGRAM - NYILVÁNOS */}
-
-                        <Link
-                            href="/diagram"
-                            className={navClass('/diagram')}
-                        >
-                            Diagram
-                        </Link>
-
-                        {/* CSAPATERŐSSÉG - NYILVÁNOS */}
-
-                        <Link
-                            href="/csapatstatisztika"
-                            className={navClass('/csapatstatisztika')}
-                        >
-                            Csapaterősség
-                        </Link>
-
-                        {/* CSAPATOK ÖSSZEHASONLÍTÁSA - NYILVÁNOS */}
-
-                        <Link
-                            href="/csapat-osszehasonlitas"
-                            className={navClass('/csapat-osszehasonlitas')}
-                        >
-                            Összehasonlítás
-                        </Link>
-
-                        {/* ÜZENETEK - BEJELENTKEZVE */}
-
-                        {user && (
-                            <Link
-                                href="/uzenetek"
-                                className={navClass('/uzenetek')}
-                            >
-                                Üzenetek
-                            </Link>
-                        )}
-
-                        {/* ADMINISZTRÁTORI MENÜ */}
-
-                        {isAdmin && (
-                            <>
-                                {/* KLUB CRUD */}
-
-                                <Link
-                                    href="/admin/klubok"
-                                    className={navClass('/admin/klubok')}
-                                >
-                                    CRUD
-                                </Link>
-
-                                {/* REACT + AXIOS CRUD - ADMIN */}
-
-                                <Link
-                                    href="/admin/react-posztok"
-                                    className={navClass('/admin/react-posztok')}
-                                >
-                                    React CRUD
-                                </Link>
-
-                                {/* TESZTJELENTÉSEK - ADMIN */}
-
-                                <Link
-                                    href="/admin/teszt"
-                                    className={navClass('/admin/teszt')}
-                                >
-                                    Teszt
-                                </Link>
-
-                                {/* ADMIN FŐOLDAL */}
-
-                                <Link
-                                    href="/admin"
-                                    className={
-                                        isActive('/admin') &&
-                                        !isActive('/admin/klubok') &&
-                                        !isActive('/admin/react-posztok') &&
-                                        !isActive('/admin/teszt')
-                                            ? 'text-sm font-semibold text-emerald-400'
-                                            : 'text-sm font-semibold text-slate-300 hover:text-emerald-400'
-                                    }
-                                >
-                                    Admin
-                                </Link>
-                            </>
-                        )}
-
-                    </nav>
-
-                    {/* FIÓKMENÜ */}
-
-                    <div className="hidden items-center gap-3 xl:flex">
-
-                        {user ? (
-                            <>
-                                <span className="text-sm text-slate-300">
-                                    Üdv,
-                                    <strong className="ml-1 text-emerald-400">
-                                        {user.name}
-                                    </strong>
-                                </span>
-
-                                <Link
-                                    href="/dashboard"
-                                    className="rounded-lg border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-400 hover:bg-emerald-600 hover:text-white"
-                                >
-                                    Dashboard
-                                </Link>
-
-                                <Link
-                                    href="/logout"
-                                    method="post"
-                                    as="button"
-                                    className="cursor-pointer rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
-                                >
-                                    Kijelentkezés
-                                </Link>
-                            </>
-                        ) : (
-                            <>
-                                <Link
-                                    href="/login"
-                                    className="text-sm font-semibold text-slate-300 hover:text-emerald-400"
-                                >
-                                    Bejelentkezés
-                                </Link>
-
-                                <Link
-                                    href="/register"
-                                    className="rounded-lg border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-400 hover:bg-emerald-600 hover:text-white"
-                                >
-                                    Regisztráció
-                                </Link>
-                            </>
-                        )}
-
-                    </div>
-
-                    {/* MOBILMENÜ GOMB */}
-
-                    <button
-                        type="button"
-                        aria-label="Navigáció megnyitása"
-                        aria-controls="nb1-mobile-menu"
-                        aria-expanded={mobileOpen}
-                        onClick={() => setMobileOpen(!mobileOpen)}
-                        className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold xl:hidden"
-                    >
-                        {mobileOpen
-                            ? '✕ Bezárás'
-                            : '☰ Menü'}
-                    </button>
-
-                </div>
-
-                {/* MOBIL NAVIGÁCIÓ */}
-
-                {mobileOpen && (
-                    <nav
-                        id="nb1-mobile-menu"
-                        aria-label="Mobil navigáció"
-                        className="border-t border-white/10 bg-slate-900 px-5 py-5 xl:hidden"
-                    >
-
-                        <div className="mx-auto flex max-w-7xl flex-col gap-2">
-
-                            <Link
-                                href="/"
-                                onClick={closeMenu}
-                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
-                            >
-                                Főoldal
-                            </Link>
-
-                            <p className="px-4 pt-3 text-xs font-bold uppercase text-emerald-400">
-                                Adatbázis
-                            </p>
-
-                            <Link
-                                href="/klubok"
-                                onClick={closeMenu}
-                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
-                            >
-                                Klubok
-                            </Link>
-
-                            <Link
-                                href="/labdarugok"
-                                onClick={closeMenu}
-                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
-                            >
-                                Labdarúgók
-                            </Link>
-
-                            <Link
-                                href="/kapcsolat"
-                                onClick={closeMenu}
-                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
-                            >
-                                Kapcsolat
-                            </Link>
-
-                            <Link
-                                href="/diagram"
-                                onClick={closeMenu}
-                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
-                            >
-                                Diagram
-                            </Link>
-
-                            {/* CSAPATERŐSSÉG - NYILVÁNOS */}
-
-                            <Link
-                                href="/csapatstatisztika"
-                                onClick={closeMenu}
-                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
-                            >
-                                ⚽ Csapaterősség
-                            </Link>
-
-                            {/* KÉT CSAPAT ÖSSZEHASONLÍTÁSA - NYILVÁNOS */}
-
-                            <Link
-                                href="/csapat-osszehasonlitas"
-                                onClick={closeMenu}
-                                className="rounded-lg px-4 py-3 hover:bg-slate-800"
-                            >
-                                ⚽ Összehasonlítás
-                            </Link>
-
-                            {/* ÜZENETEK */}
-
-                            {user && (
-                                <Link
-                                    href="/uzenetek"
-                                    onClick={closeMenu}
-                                    className="rounded-lg px-4 py-3 hover:bg-slate-800"
-                                >
-                                    Üzenetek
-                                </Link>
-                            )}
-
-                            {/* ADMIN - MOBILON IS */}
+                            {user && renderMenuLink({
+                                label: 'Üzenetek',
+                                href: '/uzenetek',
+                            })}
 
                             {isAdmin && (
-                                <>
-                                    {/* KLUB CRUD */}
-
-                                    <Link
-                                        href="/admin/klubok"
-                                        onClick={closeMenu}
-                                        className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
+                                <div className="nb1-admin-dropdown">
+                                    <button
+                                        type="button"
+                                        className="nb1-nav-link nb1-admin-toggle"
+                                        onClick={() =>
+                                            setAdminOpen(!adminOpen)
+                                        }
+                                        aria-expanded={adminOpen}
                                     >
-                                        ⚙️ Klubok CRUD
-                                    </Link>
+                                        Admin ▾
+                                    </button>
 
-                                    {/* REACT + AXIOS CRUD */}
-
-                                    <Link
-                                        href="/admin/react-posztok"
-                                        onClick={closeMenu}
-                                        className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
-                                    >
-                                        ⚛️ React CRUD
-                                    </Link>
-
-                                    {/* TESZTJELENTÉSEK */}
-
-                                    <Link
-                                        href="/admin/teszt"
-                                        onClick={closeMenu}
-                                        className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
-                                    >
-                                        🧪 Teszt
-                                    </Link>
-
-                                    <Link
-                                        href="/admin"
-                                        onClick={closeMenu}
-                                        className="rounded-lg px-4 py-3 font-semibold text-emerald-400 hover:bg-slate-800"
-                                    >
-                                        Adminisztráció
-                                    </Link>
-                                </>
+                                    {adminOpen && (
+                                        <div className="nb1-admin-dropdown-menu">
+                                            {adminMenu.map(renderMenuLink)}
+                                        </div>
+                                    )}
+                                </div>
                             )}
+                        </nav>
 
-                            <div className="my-3 border-t border-white/10" />
+                        {/* FIÓK MŰVELETEK */}
 
-                            {/* MOBIL FIÓKMENÜ */}
-
+                        <div className="nb1-account-actions">
                             {user ? (
                                 <>
-                                    <p className="px-4 py-2 text-sm text-emerald-400">
-                                        Bejelentkezve: {user.name}
-                                    </p>
+                                    <span className="nb1-account-name">
+                                        {user.name}
+                                    </span>
 
                                     <Link
                                         href="/dashboard"
-                                        onClick={closeMenu}
-                                        className="rounded-lg px-4 py-3 hover:bg-slate-800"
+                                        className="nb1-account-button nb1-account-outline"
                                     >
                                         Dashboard
                                     </Link>
@@ -461,7 +575,7 @@ export default function Nb1Layout({
                                         href="/logout"
                                         method="post"
                                         as="button"
-                                        className="cursor-pointer rounded-lg bg-red-700 px-4 py-3 text-left font-semibold text-white"
+                                        className="nb1-account-button nb1-account-dark"
                                     >
                                         Kijelentkezés
                                     </Link>
@@ -470,114 +584,207 @@ export default function Nb1Layout({
                                 <>
                                     <Link
                                         href="/login"
-                                        onClick={closeMenu}
-                                        className="rounded-lg px-4 py-3 hover:bg-slate-800"
+                                        className="nb1-account-button nb1-account-outline"
                                     >
                                         Bejelentkezés
                                     </Link>
 
                                     <Link
                                         href="/register"
-                                        onClick={closeMenu}
-                                        className="rounded-lg bg-emerald-600 px-4 py-3 font-semibold text-white"
+                                        className="nb1-account-button nb1-account-primary"
                                     >
                                         Regisztráció
                                     </Link>
                                 </>
                             )}
-
                         </div>
+                    </div>
 
+                    {/* MOBILMENÜ GOMB */}
+
+                    <button
+                        type="button"
+                        className="nb1-mobile-menu-button"
+                        onClick={() => setMobileOpen(!mobileOpen)}
+                        aria-controls="nb1-mobile-navigation"
+                        aria-expanded={mobileOpen}
+                    >
+                        {mobileOpen
+                            ? '✕ Menü bezárása'
+                            : '☰ Menü megnyitása'}
+                    </button>
+
+                    {/* MOBIL NAVIGÁCIÓ */}
+
+                    <nav
+                        id="nb1-mobile-navigation"
+                        className="nb1-mobile-navigation"
+                        aria-label="Mobil navigáció"
+                        hidden={!mobileOpen}
+                    >
+                        {publicMenu.map(renderMenuLink)}
+
+                        {user && renderMenuLink({
+                            label: 'Üzenetek',
+                            href: '/uzenetek',
+                        })}
+
+                        {isAdmin && (
+                            <>
+                                <div className="nb1-mobile-section-title">
+                                    Adminisztráció
+                                </div>
+
+                                {adminMenu.map(renderMenuLink)}
+                            </>
+                        )}
+
+                        <div className="nb1-mobile-account">
+                            {user ? (
+                                <>
+                                    <span className="nb1-account-name">
+                                        Bejelentkezve: {user.name}
+                                    </span>
+
+                                    <Link
+                                        href="/dashboard"
+                                        onClick={closeMenus}
+                                        className="nb1-account-button nb1-account-outline"
+                                    >
+                                        Dashboard
+                                    </Link>
+
+                                    <Link
+                                        href="/logout"
+                                        method="post"
+                                        as="button"
+                                        className="nb1-account-button nb1-account-dark"
+                                    >
+                                        Kijelentkezés
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <Link
+                                        href="/login"
+                                        onClick={closeMenus}
+                                        className="nb1-account-button nb1-account-outline"
+                                    >
+                                        Bejelentkezés
+                                    </Link>
+
+                                    <Link
+                                        href="/register"
+                                        onClick={closeMenus}
+                                        className="nb1-account-button nb1-account-primary"
+                                    >
+                                        Regisztráció
+                                    </Link>
+                                </>
+                            )}
+                        </div>
                     </nav>
-                )}
-
+                </div>
             </header>
 
-            {/* OLDAL TARTALMA */}
+            {/* OLDALTARTALOM */}
 
-            <main className="min-w-0 flex-1">
+            <main
+                className="nb1-main"
+                id="nb1-main-content"
+            >
                 {children}
             </main>
 
-            {/* KÖZÖS LÁBLÉC */}
+            {/* LÁBLÉC */}
 
-            <footer className="border-t border-white/10 bg-black/50">
+            <footer className="nb1-site-footer">
+                <div className="nb1-footer-container">
 
-                <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:grid-cols-3">
+                    <div className="nb1-footer-grid">
 
-                    <section>
+                        <section>
+                            <h2 className="nb1-footer-heading">
+                                NB I. Labdarúgás
+                            </h2>
 
-                        <h2 className="text-xl font-black text-emerald-400">
-                            NB I. LABDARÚGÁS
-                        </h2>
+                            <p className="nb1-footer-text">
+                                Magyar labdarúgóklubok és
+                                játékosok adatbázisa.
+                            </p>
 
-                        <p className="mt-3 text-sm leading-6 text-slate-400">
-                            Magyar labdarúgóklubok
-                            és játékosok adatbázisa.
-                        </p>
+                            <p className="nb1-footer-text">
+                                Webprogramozás II. –
+                                Előadás beadandó
+                            </p>
+                        </section>
 
-                        <p className="mt-3 text-sm text-slate-500">
-                            Webprogramozás II. – Előadás beadandó
-                        </p>
+                        <section>
+                            <h2 className="nb1-footer-heading">
+                                Készítette
+                            </h2>
 
-                    </section>
+                            <p className="nb1-footer-text">
+                                Farkas Tamás – PLPJEB
+                            </p>
 
-                    <section>
+                            <p className="nb1-footer-text">
+                                Fodor Árpád – U4BKST
+                            </p>
 
-                        <h2 className="font-bold text-white">
-                            Készítette:
-                        </h2>
+                            <p className="nb1-footer-text">
+                                Neumann János Egyetem – GAMF
+                            </p>
+                        </section>
 
-                        <p className="mt-3 text-sm text-slate-400">
-                            Farkas Tamás – PLPJEB
-                        </p>
+                        <section>
+                            <h2 className="nb1-footer-heading">
+                                Technológiák
+                            </h2>
 
-                        <p className="mt-2 text-sm text-slate-400">
-                            Fodor Árpád – U4BKST
-                        </p>
+                            <p className="nb1-footer-text">
+                                Laravel 12 · React · TypeScript
+                                · Inertia.js · MySQL · Chart.js · Axios
+                            </p>
 
-                    </section>
+                            <p className="nb1-footer-text">
+                                Megjelenés:{' '}
+                                <a
+                                    href="https://html5up.net/dopetrope"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="nb1-footer-link"
+                                >
+                                    Dopetrope – HTML5 UP
+                                </a>
+                            </p>
 
-                    <section>
+                            <p className="nb1-footer-text">
+                                <Link
+                                    href="/"
+                                    className="nb1-footer-link"
+                                >
+                                    Vissza a főoldalra
+                                </Link>
+                            </p>
+                        </section>
+                    </div>
 
-                        <h2 className="font-bold text-white">
-                            Technológiák
-                        </h2>
-
-                        <p className="mt-3 text-sm leading-7 text-slate-400">
-                            Laravel 12
-                            <br />
-                            React + TypeScript
-                            <br />
-                            Inertia.js
-                            <br />
-                            MySQL
-                            <br />
-                            Chart.js
-                            <br />
-                            Tailwind CSS
-                            <br />
-                            Axios
-                        </p>
-
-                        <Link
-                            href="/"
-                            className="mt-4 inline-block text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                    <div className="nb1-footer-bottom">
+                        © 2026 NB I. Labdarúgás
+                        {' | '}
+                        Design:{' '}
+                        <a
+                            href="https://html5up.net"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="nb1-footer-link"
                         >
-                            ← Vissza a főoldalra
-                        </Link>
-
-                    </section>
-
+                            HTML5 UP
+                        </a>
+                    </div>
                 </div>
-
-                <div className="border-t border-white/10 px-6 py-6 text-center text-xs text-slate-500">
-                    © 2026 NB I. Labdarúgás –
-                    Neumann János Egyetem – GAMF
-                </div>
-
             </footer>
-
         </div>
     );
 }
