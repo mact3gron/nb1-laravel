@@ -1,35 +1,50 @@
 import { Head, Link } from '@inertiajs/react';
 import Nb1Layout from '../layouts/nb1-layout';
 
-interface Statistic {
-    number: string;
-    label: string;
+// ==========================================
+// 1. ADATBÁZISBÓL ÉRKEZŐ ADATOK
+// ==========================================
+
+interface HomeStatistics {
+    klubok: number;
+    labdarugok: number;
+    posztok: number;
 }
 
-const statistics: Statistic[] = [
-    {
-        number: '12',
-        label: 'Labdarúgóklub',
-    },
-    {
-        number: '318',
-        label: 'Labdarúgó',
-    },
-    {
-        number: '14',
-        label: 'Játékosposzt',
-    },
-];
+interface HomeProps {
+    statistics: HomeStatistics;
+}
 
-export default function Home() {
+// ==========================================
+// 2. FŐOLDAL
+// ==========================================
+
+export default function Home({
+    statistics,
+}: HomeProps) {
+
+    const statisztikak = [
+        {
+            number: statistics.klubok,
+            label: 'Labdarúgóklub',
+        },
+        {
+            number: statistics.labdarugok,
+            label: 'Labdarúgó',
+        },
+        {
+            number: statistics.posztok,
+            label: 'Játékosposzt',
+        },
+    ];
+
     return (
         <Nb1Layout>
             <Head title="NB I. | Főoldal" />
 
             <div className="nb1-home">
 
-                {/* A Dopetrope CSS-től elkülönített
-                    főoldali stílusok */}
+                {/* FŐOLDALI STÍLUSOK */}
 
                 <style>{`
                     .nb1-home {
@@ -132,7 +147,6 @@ export default function Home() {
 
                     .nb1-home .nb1-hero-title {
                         max-width: 780px;
-
                         margin-bottom: 26px;
 
                         color: #ffffff !important;
@@ -161,7 +175,6 @@ export default function Home() {
                         flex-wrap: wrap;
                         align-items: center;
                         gap: 16px;
-
                         margin-top: 38px;
                     }
 
@@ -176,7 +189,6 @@ export default function Home() {
 
                         min-height: 56px;
                         padding: 15px 28px;
-
                         border-radius: 8px;
 
                         font-size: 15px;
@@ -406,7 +418,6 @@ export default function Home() {
                         margin-top: 28px;
 
                         color: var(--home-green) !important;
-
                         font-size: 15px;
                         font-weight: 800;
                     }
@@ -568,14 +579,14 @@ export default function Home() {
                 </section>
 
                 {/* =============================
-                    STATISZTIKÁK
+                    DINAMIKUS STATISZTIKÁK
                     ============================= */}
 
                 <section className="nb1-statistics">
 
                     <div className="nb1-statistics-grid">
 
-                        {statistics.map((stat) => (
+                        {statisztikak.map((stat) => (
                             <div
                                 key={stat.label}
                                 className="nb1-stat-card"

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 use App\Http\Controllers\KlubController;
@@ -27,11 +28,21 @@ use App\Http\Controllers\ReactLabdarugoController;
 */
 
 // ==========================================
-// 1. FŐOLDAL
+// 1. FŐOLDAL - DINAMIKUS STATISZTIKÁK
 // ==========================================
 
 Route::get('/', function () {
-    return Inertia::render('home');
+
+    $statistics = [
+        'klubok' => DB::table('klub')->count(),
+        'labdarugok' => DB::table('labdarugo')->count(),
+        'posztok' => DB::table('poszt')->count(),
+    ];
+
+    return Inertia::render('home', [
+        'statistics' => $statistics,
+    ]);
+
 })->name('home');
 
 
