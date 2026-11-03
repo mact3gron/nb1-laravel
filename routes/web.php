@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -11,7 +12,7 @@ use App\Http\Controllers\AdminKlubController;
 use App\Http\Controllers\CsapatStatisztikaController;
 use App\Http\Controllers\CsapatOsszehasonlitasController;
 use App\Http\Controllers\TesztController;
-use App\Http\Controllers\ReactPosztController;
+use App\Http\Controllers\ReactLabdarugoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,24 +21,8 @@ use App\Http\Controllers\ReactPosztController;
 |
 | Laravel 12 + React + TypeScript + Inertia.js
 |
-| NYILVÁNOS:
-| - Főoldal
-| - Klubok
-| - Labdarúgók
-| - Kapcsolat
-| - Diagram
-| - Csapaterősség
-| - Két csapat összehasonlítása
-|
-| BEJELENTKEZETT FELHASZNÁLÓ:
-| - Üzenetek
-| - Dashboard
-|
-| ADMINISZTRÁTOR:
-| - Adminpanel
-| - Klubok CRUD
-| - Tesztjelentések
-| - React + Axios Poszt CRUD
+| Nyilvános oldalak, bejelentkezéshez kötött funkciók
+| és adminisztrátori CRUD-útvonalak.
 |
 */
 
@@ -74,8 +59,6 @@ Route::get('/labdarugok', [
 // 4. KAPCSOLAT - NYILVÁNOS
 // ==========================================
 
-// Regisztráció nélkül is elérhető.
-
 Route::get('/kapcsolat', [
     KapcsolatController::class,
     'index',
@@ -100,27 +83,13 @@ Route::get('/diagram', [
 
 
 // ==========================================
-// 5/A. CSAPATERŐSSÉG - NYILVÁNOS
+// 6. CSAPATERŐSSÉG - NYILVÁNOS
 // ==========================================
-
-// Csapatstatisztika és teljesítményindex
-// számítása a megadott mérkőzésadatokból.
-//
-// Regisztráció és bejelentkezés nélkül
-// is használható.
-//
-// GET: Csapaterősség oldal megjelenítése
 
 Route::get('/csapatstatisztika', [
     CsapatStatisztikaController::class,
     'index',
 ])->name('csapatstatisztika.index');
-
-
-// POST: Mérkőzésadatok feldolgozása
-// és a csapat teljesítményének értékelése.
-//
-// Maximum 10 kérés percenként.
 
 Route::post('/csapatstatisztika', [
     CsapatStatisztikaController::class,
@@ -131,12 +100,8 @@ Route::post('/csapatstatisztika', [
 
 
 // ==========================================
-// 5/B. KÉT CSAPAT ÖSSZEHASONLÍTÁSA - NYILVÁNOS
+// 7. KÉT CSAPAT ÖSSZEHASONLÍTÁSA
 // ==========================================
-
-// A klubok a meglévő MySQL-adatbázisból érkeznek.
-// A két csapat eredményeit külön-külön adjuk meg.
-// Nincs adatbázis-módosítás; új migráció nem kell.
 
 Route::get('/csapat-osszehasonlitas', [
     CsapatOsszehasonlitasController::class,
@@ -152,7 +117,7 @@ Route::post('/csapat-osszehasonlitas', [
 
 
 // ==========================================
-// 6. ÜZENETEK - CSAK BEJELENTKEZVE
+// 8. ÜZENETEK - BEJELENTKEZÉS SZÜKSÉGES
 // ==========================================
 
 Route::middleware(['auth'])
@@ -167,7 +132,7 @@ Route::middleware(['auth'])
 
 
 // ==========================================
-// 7. FELHASZNÁLÓI DASHBOARD
+// 9. FELHASZNÁLÓI DASHBOARD
 // ==========================================
 
 Route::middleware(['auth', 'verified'])
@@ -181,7 +146,7 @@ Route::middleware(['auth', 'verified'])
 
 
 // ==========================================
-// 8. ADMINISZTRÁCIÓ
+// 10. ADMINISZTRÁCIÓ
 // ==========================================
 
 Route::middleware(['auth', 'admin'])
@@ -189,9 +154,7 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
 
-        // ----------------------------------
         // ADMIN FŐOLDAL
-        // ----------------------------------
 
         Route::get('/', function () {
             return Inertia::render('admin/index');
@@ -202,31 +165,20 @@ Route::middleware(['auth', 'admin'])
         // KLUB CRUD
         // ==================================
 
-        // READ - Klubok listázása
-
         Route::get('/klubok', [
             AdminKlubController::class,
             'index',
         ])->name('klubok.index');
-
-
-        // CREATE - Új klub létrehozása
 
         Route::post('/klubok', [
             AdminKlubController::class,
             'store',
         ])->name('klubok.store');
 
-
-        // UPDATE - Klub módosítása
-
         Route::put('/klubok/{klub}', [
             AdminKlubController::class,
             'update',
         ])->name('klubok.update');
-
-
-        // DELETE - Klub törlése
 
         Route::delete('/klubok/{klub}', [
             AdminKlubController::class,
@@ -235,13 +187,8 @@ Route::middleware(['auth', 'admin'])
 
 
         // ==================================
-        // TESZT MENÜ - ADMIN
+        // TESZT MENÜ
         // ==================================
-
-        // Valódi PHPUnit Unit és Feature
-        // teszteredmények megjelenítése.
-        // A böngészőből tesztet nem futtatunk.
-        // Az auth + admin middleware védi.
 
         Route::get('/teszt', [
             TesztController::class,
@@ -250,118 +197,51 @@ Route::middleware(['auth', 'admin'])
 
 
         // ==================================
-        // REACT + AXIOS POSZT CRUD - ADMIN
+        // REACT + AXIOS LABDARÚGÓ CRUD
         // ==================================
 
-        /*
-        |--------------------------------------------------------------------------
-        | REACT + AXIOS CRUD VÉGPONTOK
-        |--------------------------------------------------------------------------
-        |
-        | A meglévő "poszt" adatbázistáblával
-        | dolgozunk.
-        |
-        | A React felület külön Axios
-        | HTTP-kéréseket küld a Laravelnek.
-        |
-        | Minden műveletet az auth + admin
-        | middleware véd.
-        |
-        | GET     - React oldal
-        | GET     - JSON-adatok lekérdezése
-        | POST    - Új poszt létrehozása
-        | PUT     - Poszt módosítása
-        | DELETE  - Poszt törlése
-        |
-        */
-
-
-        // ----------------------------------
-        // REACT OLDAL MEGJELENÍTÉSE
-        // ----------------------------------
-
-        Route::get('/react-posztok', [
-            ReactPosztController::class,
+        Route::get('/react-labdarugok', [
+            ReactLabdarugoController::class,
             'index',
-        ])->name('react-posztok.index');
+        ])->name('react-labdarugok.index');
 
-
-        // ----------------------------------
-        // READ - JSON-ADATOK LEKÉRÉSE
-        // ----------------------------------
-
-        // GET /admin/react-posztok/adatok
-        //
-        // A React az Axios segítségével
-        // innen tölti be a posztok listáját.
-        //
-        // Keresés és lapozás is támogatott.
-
-        Route::get('/react-posztok/adatok', [
-            ReactPosztController::class,
+        Route::get('/react-labdarugok/adatok', [
+            ReactLabdarugoController::class,
             'adatok',
-        ])->name('react-posztok.adatok');
+        ])->name('react-labdarugok.adatok');
 
+        Route::get('/react-labdarugok/valasztok', [
+            ReactLabdarugoController::class,
+            'valasztok',
+        ])->name('react-labdarugok.valasztok');
 
-        // ----------------------------------
-        // CREATE - ÚJ POSZT
-        // ----------------------------------
-
-        // POST /admin/react-posztok
-        //
-        // JSON-adatok fogadása.
-        // Laravel szerveroldali validáció.
-
-        Route::post('/react-posztok', [
-            ReactPosztController::class,
+        Route::post('/react-labdarugok', [
+            ReactLabdarugoController::class,
             'store',
-        ])->name('react-posztok.store');
+        ])->name('react-labdarugok.store');
 
-
-        // ----------------------------------
-        // UPDATE - POSZT MÓDOSÍTÁSA
-        // ----------------------------------
-
-        // PUT /admin/react-posztok/{poszt}
-        //
-        // Laravel Eloquent modellkötés.
-        // A {poszt} paraméter a Poszt
-        // modell megfelelő rekordja.
-
-        Route::put('/react-posztok/{poszt}', [
-            ReactPosztController::class,
+        Route::put('/react-labdarugok/{labdarugo}', [
+            ReactLabdarugoController::class,
             'update',
-        ])->name('react-posztok.update');
+        ])->name('react-labdarugok.update');
 
-
-        // ----------------------------------
-        // DELETE - POSZT TÖRLÉSE
-        // ----------------------------------
-
-        // DELETE /admin/react-posztok/{poszt}
-        //
-        // A Controller ellenőrzi, hogy
-        // tartozik-e játékos a poszthoz.
-        //
-        // Ha igen, a törlést megtagadja.
-
-        Route::delete('/react-posztok/{poszt}', [
-            ReactPosztController::class,
+        Route::delete('/react-labdarugok/{labdarugo}', [
+            ReactLabdarugoController::class,
             'destroy',
-        ])->name('react-posztok.destroy');
+        ])->name('react-labdarugok.destroy');
 
     });
 
 
 // ==========================================
-// 9. FELHASZNÁLÓI BEÁLLÍTÁSOK
+// 11. FELHASZNÁLÓI BEÁLLÍTÁSOK
 // ==========================================
 
 require __DIR__ . '/settings.php';
 
 
 // ==========================================
-// 10. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
+// 12. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
 // ==========================================
 
 require __DIR__ . '/auth.php';

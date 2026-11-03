@@ -34,7 +34,10 @@ const publicMenu: MenuItem[] = [
 const adminMenu: MenuItem[] = [
     { label: 'Admin főoldal', href: '/admin' },
     { label: 'Klub CRUD', href: '/admin/klubok' },
-    { label: 'React CRUD', href: '/admin/react-posztok' },
+    {
+        label: 'React + Axios – Labdarúgó CRUD',
+        href: '/admin/react-labdarugok',
+    },
     { label: 'Tesztek', href: '/admin/teszt' },
 ];
 
@@ -442,8 +445,6 @@ export default function Nb1Layout({
                     text-align: center;
                 }
 
-                /* KISEBB ASZTALI NÉZET */
-
                 @media (max-width: 1180px) {
                     .nb1-layout .nb1-navigation-row {
                         display: none;
@@ -465,8 +466,6 @@ export default function Nb1Layout({
                         padding: 22px 0 18px;
                     }
                 }
-
-                /* MOBIL */
 
                 @media (max-width: 768px) {
                     .nb1-layout .nb1-header-container {
@@ -700,7 +699,6 @@ export default function Nb1Layout({
 
             <footer className="nb1-site-footer">
                 <div className="nb1-footer-container">
-
                     <div className="nb1-footer-grid">
 
                         <section>
