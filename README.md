@@ -71,7 +71,9 @@ seederekkel állítható elő.
 - Adatbázis keresése
 - Kapcsolatfelvételi űrlap
 - Üzenetküldés regisztráció nélkül
-- Chart.js diagram
+- Diagram
+- Csapaterősség
+- Összehasonlítás
 
 ### Regisztrált felhasználók
 
@@ -87,6 +89,8 @@ seederekkel állítható elő.
 - Új klub létrehozása
 - Meglévő klub módosítása
 - Klub törlése
+- React + Axios CRUD – játékosok hozzáadása, módosítása és törlése.
+- Automatizált tesztek
 
 A klubok kezelését Laravel middleware
 védi. A CRUD műveletek kizárólag
@@ -183,7 +187,8 @@ Az üzenetek megtekintéséhez
 bejelentkezés szükséges.
 
 A klubok módosításához és törléséhez
-adminisztrátori jogosultság szükséges.
+adminisztrátori jogosultság szükséges,
+amennyiben a klub tartalmaz játékost akkor nem klub nem törölhető.
 
 ## GitHub
 
@@ -200,7 +205,7 @@ alkalmas PHP- és MySQL-tárhelyre
 telepíthető.
 
 A webkiszolgáló publikus gyökérkönyvtára
-a Laravel `public` könyvtára legyen.
+a Laravel `public` könyvtára kell legyen.
 
 A React alkalmazás fordított fájljai
 a `public/build` könyvtárban találhatók.
