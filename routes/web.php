@@ -29,6 +29,10 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::get('/introduction', function () {
+    return view('introduction');
+})->name('introduction');
+
 Route::get('/adatbazis', [
     AdatbazisController::class,
     'index',
