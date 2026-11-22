@@ -9,7 +9,7 @@ interface AuthUser {
     id: number;
     name: string;
     email: string;
-    is_admin?: boolean | number;
+    role: number;
 }
 
 interface AuthData {
@@ -23,12 +23,9 @@ interface MenuItem {
 
 const publicMenu: MenuItem[] = [
     { label: 'Főoldal', href: '/' },
-    { label: 'Klubok', href: '/klubok' },
-    { label: 'Labdarúgók', href: '/labdarugok' },
+    { label: 'Adatbázis', href: '/adatbazis' },
     { label: 'Kapcsolat', href: '/kapcsolat' },
     { label: 'Diagram', href: '/diagram' },
-    { label: 'Csapaterősség', href: '/csapatstatisztika' },
-    { label: 'Összehasonlítás', href: '/csapat-osszehasonlitas' },
 ];
 
 const adminMenu: MenuItem[] = [
@@ -52,9 +49,7 @@ export default function Nb1Layout({
     const auth = props.auth as AuthData | undefined;
     const user = auth?.user ?? null;
 
-    const isAdmin =
-        user?.is_admin === true ||
-        user?.is_admin === 1;
+    const isAdmin = Number(user?.role) === 1;
 
     const currentPath = url.split('?')[0];
 
@@ -75,21 +70,38 @@ export default function Nb1Layout({
     }
 
     function renderMenuLink(item: MenuItem) {
+        const className = isActive(item.href)
+            ? 'nb1-nav-link nb1-nav-active'
+            : 'nb1-nav-link';
+
+        // A Blade-válaszokat teljes oldalbetöltéssel kell megnyitni.
+        const isBladePage =
+            item.href === '/adatbazis' ||
+            item.href === '/admin' ||
+            item.href === '/admin/klubok' ||
+            item.href.startsWith('/admin/klubok/') ||
+            item.href === '/user';
+
+        if (isBladePage) {
+            return (
+                <a
+                    key={item.href}
+                    href={item.href}
+                    className={className}
+                    aria-current={currentPath === item.href ? 'page' : undefined}
+                >
+                    {item.label}
+                </a>
+            );
+        }
+
         return (
             <Link
                 key={item.href}
                 href={item.href}
                 onClick={closeMenus}
-                className={
-                    isActive(item.href)
-                        ? 'nb1-nav-link nb1-nav-active'
-                        : 'nb1-nav-link'
-                }
-                aria-current={
-                    currentPath === item.href
-                        ? 'page'
-                        : undefined
-                }
+                className={className}
+                aria-current={currentPath === item.href ? 'page' : undefined}
             >
                 {item.label}
             </Link>
