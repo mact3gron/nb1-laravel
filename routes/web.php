@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -20,15 +21,13 @@ use App\Http\Controllers\ReactLabdarugoController;
 | NB I. LABDARÚGÁS - WEB ROUTES
 |--------------------------------------------------------------------------
 |
-| Laravel 12 + React + TypeScript + Inertia.js
-|
-| Nyilvános oldalak, bejelentkezéshez kötött funkciók
-| és adminisztrátori CRUD-útvonalak.
+| Laravel 12
+| Tanári autentikációs minta + NB I. alkalmazás
 |
 */
 
 // ==========================================
-// 1. FŐOLDAL - DINAMIKUS STATISZTIKÁK
+// 1. FŐOLDAL
 // ==========================================
 
 Route::get('/', function () {
@@ -47,7 +46,16 @@ Route::get('/', function () {
 
 
 // ==========================================
-// 2. KLUBOK - NYILVÁNOS
+// 2. TANÁRI AUTENTIKÁCIÓS MINTA
+// ==========================================
+
+Route::get('/introduction', function () {
+    return view('introduction');
+})->name('introduction');
+
+
+// ==========================================
+// 3. KLUBOK - NYILVÁNOS
 // ==========================================
 
 Route::get('/klubok', [
@@ -57,7 +65,7 @@ Route::get('/klubok', [
 
 
 // ==========================================
-// 3. LABDARÚGÓK - NYILVÁNOS
+// 4. LABDARÚGÓK - NYILVÁNOS
 // ==========================================
 
 Route::get('/labdarugok', [
@@ -67,7 +75,7 @@ Route::get('/labdarugok', [
 
 
 // ==========================================
-// 4. KAPCSOLAT - NYILVÁNOS
+// 5. KAPCSOLAT - NYILVÁNOS
 // ==========================================
 
 Route::get('/kapcsolat', [
@@ -84,7 +92,7 @@ Route::post('/kapcsolat', [
 
 
 // ==========================================
-// 5. DIAGRAM - NYILVÁNOS
+// 6. DIAGRAM - NYILVÁNOS
 // ==========================================
 
 Route::get('/diagram', [
@@ -94,7 +102,7 @@ Route::get('/diagram', [
 
 
 // ==========================================
-// 6. CSAPATERŐSSÉG - NYILVÁNOS
+// 7. CSAPATERŐSSÉG
 // ==========================================
 
 Route::get('/csapatstatisztika', [
@@ -111,7 +119,7 @@ Route::post('/csapatstatisztika', [
 
 
 // ==========================================
-// 7. KÉT CSAPAT ÖSSZEHASONLÍTÁSA
+// 8. KÉT CSAPAT ÖSSZEHASONLÍTÁSA
 // ==========================================
 
 Route::get('/csapat-osszehasonlitas', [
@@ -128,7 +136,7 @@ Route::post('/csapat-osszehasonlitas', [
 
 
 // ==========================================
-// 8. ÜZENETEK - BEJELENTKEZÉS SZÜKSÉGES
+// 9. BEJELENTKEZETT FELHASZNÁLÓK
 // ==========================================
 
 Route::middleware(['auth'])
@@ -143,7 +151,7 @@ Route::middleware(['auth'])
 
 
 // ==========================================
-// 9. FELHASZNÁLÓI DASHBOARD
+// 10. TANÁRI USER OLDAL ÉS DASHBOARD
 // ==========================================
 
 Route::middleware(['auth', 'verified'])
@@ -153,11 +161,15 @@ Route::middleware(['auth', 'verified'])
             return Inertia::render('dashboard');
         })->name('dashboard');
 
+        Route::get('/user', function () {
+            return view('user');
+        })->name('user');
+
     });
 
 
 // ==========================================
-// 10. ADMINISZTRÁCIÓ
+// 11. ADMINISZTRÁCIÓ
 // ==========================================
 
 Route::middleware(['auth', 'admin'])
@@ -165,10 +177,10 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
 
-        // ADMIN FŐOLDAL
+        // TANÁRI BLADE ADMIN OLDAL
 
         Route::get('/', function () {
-            return Inertia::render('admin/index');
+            return view('admin');
         })->name('index');
 
 
@@ -245,14 +257,14 @@ Route::middleware(['auth', 'admin'])
 
 
 // ==========================================
-// 11. FELHASZNÁLÓI BEÁLLÍTÁSOK
+// 12. FELHASZNÁLÓI BEÁLLÍTÁSOK
 // ==========================================
 
 require __DIR__ . '/settings.php';
 
 
 // ==========================================
-// 12. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
+// 13. BEJELENTKEZÉS ÉS REGISZTRÁCIÓ
 // ==========================================
 
 require __DIR__ . '/auth.php';
