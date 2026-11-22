@@ -1,11 +1,11 @@
 <?php
-
 namespace App\Console\Commands;
 
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,9 +20,13 @@ use Illuminate\Support\Facades\Schema;
 | Funkciók:
 | - Új adminisztrátor létrehozása
 | - Meglévő felhasználó adminná tétele
+| - Adminjogosultság egységes kezelése (role és is_admin)
+| - Adatbázisszerkezet ellenőrzése
+| - E-mail és név ellenőrzése
 | - Jelszó bekérése rejtetten
 | - Jelszó megerősítése
 | - Biztonságos jelszóhash készítése
+| - Hibakezelés
 |
 */
 
@@ -52,20 +56,56 @@ class CreateAdmin extends Command
 
         $this->newLine();
 
-        // Ellenőrizzük az adatbázis szerkezetét.
-        if (!Schema::hasColumn('users', 'is_admin')) {
+        /*
+        |--------------------------------------------------------------------------
+        | 1. Adatbázis ellenőrzése
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+            if (!Schema::hasTable('users')) {
+                $this->error('Hiányzik a users tábla!');
+                $this->warn(
+                    'Futtasd: php artisan migrate'
+                );
+
+                return self::FAILURE;
+            }
+
+            if (
+                !Schema::hasColumn('users', 'is_admin') ||
+                !Schema::hasColumn('users', 'role')
+            ) {
+                $this->error(
+                    'Hiányzik az is_admin vagy a role oszlop!'
+                );
+
+                $this->warn(
+                    'Futtasd: php artisan migrate'
+                );
+
+                return self::FAILURE;
+            }
+        } catch (Throwable $e) {
+            report($e);
+
             $this->error(
-                'Hiányzik az is_admin oszlop!'
+                'Nem sikerült ellenőrizni az adatbázist!'
             );
 
             $this->warn(
-                'Először futtasd: php artisan migrate'
+                'Ellenőrizd a .env adatbázis-beállításait!'
             );
 
             return self::FAILURE;
         }
 
-        // E-mail-cím bekérése.
+        /*
+        |--------------------------------------------------------------------------
+        | 2. E-mail-cím bekérése és ellenőrzése
+        |--------------------------------------------------------------------------
+        */
+
         $email = strtolower(trim(
             (string) $this->ask('E-mail-cím')
         ));
@@ -76,14 +116,33 @@ class CreateAdmin extends Command
             return self::FAILURE;
         }
 
-        // Meglévő felhasználó ellenőrzése.
-        $existingUser = User::query()
-            ->where('email', $email)
-            ->first();
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Meglévő felhasználó keresése
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+            $existingUser = User::query()
+                ->where('email', $email)
+                ->first();
+        } catch (Throwable $e) {
+            report($e);
+
+            $this->error(
+                'Hiba történt a felhasználó keresésekor!'
+            );
+
+            return self::FAILURE;
+        }
 
         if ($existingUser !== null) {
 
-            if ($existingUser->is_admin) {
+            // Ellenőrizzük mindkét adminmezőt.
+            if (
+                (bool) $existingUser->is_admin &&
+                (int) $existingUser->role === 1
+            ) {
                 $this->info(
                     'Ez a felhasználó már adminisztrátor.'
                 );
@@ -93,6 +152,10 @@ class CreateAdmin extends Command
 
             $this->warn(
                 'Ezzel az e-mail-címmel már létezik felhasználó.'
+            );
+
+            $this->line(
+                "Felhasználó: {$existingUser->name}"
             );
 
             // Adminjogosultság csak jóváhagyással.
@@ -105,19 +168,52 @@ class CreateAdmin extends Command
                 return self::SUCCESS;
             }
 
-            $existingUser->is_admin = true;
-            $existingUser->save();
+            /*
+            | Adminjogosultság egységes beállítása.
+            | role = 1 : adminisztrátor
+            | role = 2 : normál felhasználó
+            */
+
+            try {
+                $existingUser->is_admin = true;
+                $existingUser->role = 1;
+
+                $existingUser->save();
+            } catch (Throwable $e) {
+                report($e);
+
+                $this->error(
+                    'Nem sikerült beállítani az adminjogosultságot!'
+                );
+
+                return self::FAILURE;
+            }
 
             $this->newLine();
 
-            $this->info(
-                'A meglévő felhasználó adminisztrátor lett!'
+            $this->info('====================================');
+            $this->info(' ADMINJOGOSULTSÁG SIKERESEN BEÁLLÍTVA');
+            $this->info('====================================');
+
+            $this->line(
+                "Felhasználó: {$existingUser->name}"
             );
+
+            $this->line(
+                "E-mail: {$existingUser->email}"
+            );
+
+            $this->newLine();
 
             return self::SUCCESS;
         }
 
-        // Új felhasználó neve.
+        /*
+        |--------------------------------------------------------------------------
+        | 4. Új felhasználó nevének bekérése
+        |--------------------------------------------------------------------------
+        */
+
         $name = trim(
             (string) $this->ask('Teljes név')
         );
@@ -128,13 +224,26 @@ class CreateAdmin extends Command
             return self::FAILURE;
         }
 
-        // Jelszó bekérése.
-        // A terminál nem jeleníti meg a karaktereket.
+        if (mb_strlen($name) > 255) {
+            $this->error(
+                'A név legfeljebb 255 karakter lehet!'
+            );
+
+            return self::FAILURE;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. Biztonságos jelszó bekérése
+        |--------------------------------------------------------------------------
+        */
+
+        // A jelszó karakterei nem jelennek meg.
         $password = (string) $this->secret(
             'Jelszó (minimum 12 karakter)'
         );
 
-        if (strlen($password) < 12) {
+        if (mb_strlen($password) < 12) {
             $this->error(
                 'A jelszó legyen legalább 12 karakter!'
             );
@@ -142,7 +251,12 @@ class CreateAdmin extends Command
             return self::FAILURE;
         }
 
-        // Jelszó megerősítése.
+        /*
+        |--------------------------------------------------------------------------
+        | 6. Jelszó megerősítése
+        |--------------------------------------------------------------------------
+        */
+
         $passwordConfirmation = (string) $this->secret(
             'Jelszó megerősítése'
         );
@@ -158,11 +272,18 @@ class CreateAdmin extends Command
             return self::FAILURE;
         }
 
-        // Adatok végleges jóváhagyása.
+        /*
+        |--------------------------------------------------------------------------
+        | 7. Adatok jóváhagyása
+        |--------------------------------------------------------------------------
+        */
+
         $this->newLine();
 
         $this->line("Név: {$name}");
         $this->line("E-mail: {$email}");
+
+        $this->newLine();
 
         if (!$this->confirm(
             'Létrehozod az adminisztrátort?',
@@ -173,30 +294,63 @@ class CreateAdmin extends Command
             return self::SUCCESS;
         }
 
-        // Új adminisztrátori felhasználó.
-        $user = new User();
+        /*
+        |--------------------------------------------------------------------------
+        | 8. E-mail ellenőrzésének kezelése
+        |--------------------------------------------------------------------------
+        */
 
-        $user->name = $name;
-        $user->email = $email;
-
-        // Jelszó biztonságos tárolása.
-        $user->password=Hash::make($password);
-
-        // Adminjogosultság beállítása.
-        $user->is_admin = true;
-
-        // E-mail-cím ellenőrzésének kezelése.
-        // Csak akkor jelöljük ellenőrzöttnek,
-        // ha ezt a parancs futtatója igazolja.
-        if ($this->confirm(
-            'Az e-mail-cím tulajdonjoga ellenőrizve van?',
+        $emailVerified = $this->confirm(
+            'Az e-mail-cím tulajdonjogát ellenőrizted?',
             false
-        )) {
-            $user->email_verified_at = now();
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | 9. Új adminisztrátor létrehozása
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+            $user = new User();
+
+            $user->name = $name;
+            $user->email = $email;
+
+            // Jelszó biztonságos hash-elése.
+            $user->password = Hash::make($password);
+
+            // Adminjogosultság.
+            $user->is_admin = true;
+            $user->role = 1;
+
+            // E-mail-cím ellenőrzöttsége.
+            if ($emailVerified) {
+                $user->email_verified_at = now();
+            }
+
+            // Mentés az adatbázisba.
+            $user->save();
+
+        } catch (Throwable $e) {
+            report($e);
+
+            $this->error(
+                'Nem sikerült létrehozni az adminisztrátort!'
+            );
+
+            $this->warn(
+                'Ellenőrizd az adatbázist és a Laravel naplófájlt!'
+            );
+
+            return self::FAILURE;
         }
 
-        // Mentés az adatbázisba.
-        $user->save();
+        /*
+        |--------------------------------------------------------------------------
+        | 10. Sikeres létrehozás
+        |--------------------------------------------------------------------------
+        */
 
         $this->newLine();
 
@@ -206,12 +360,11 @@ class CreateAdmin extends Command
 
         $this->line("Felhasználó: {$user->name}");
         $this->line("E-mail: {$user->email}");
+        $this->line("Jogosultság: ADMIN");
+        $this->line("Role: {$user->role}");
 
         $this->newLine();
 
         return self::SUCCESS;
     }
 }
-
-
-
